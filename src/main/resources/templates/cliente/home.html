@@ -1,0 +1,1884 @@
+<html>
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>BookNexus | Descubra sua próxima leitura</title>
+
+    <link rel="preconnect"
+          href="https://cdn.jsdelivr.net">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/prototype.css}"
+          href="/css/prototype.css">
+
+
+    <style>
+
+        /* =========================================================
+           SELETOR DE CLIENTE
+           ========================================================= */
+
+        .client-selector-area {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-left: auto;
+        }
+
+        .client-selector-area i {
+            color: #2d4a3e;
+            font-size: 1.1rem;
+        }
+
+        .client-selector {
+            max-width: 220px;
+            padding: 0.55rem 0.8rem;
+            border: 1px solid #bccfc4;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1e2c26;
+            font-size: 0.9rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .client-selector:focus {
+            border-color: #5a8a73;
+            box-shadow: 0 0 0 2px rgba(90, 138, 115, 0.15);
+        }
+
+        .client-selected-message {
+            font-size: 0.82rem;
+            color: #5f7569;
+            white-space: nowrap;
+        }
+
+
+        /* =========================================================
+           MENSAGENS
+           ========================================================= */
+
+        .home-message {
+            max-width: 1200px;
+            margin: 1rem auto 0;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .home-message.success {
+            background: #e5f3ea;
+            color: #24543a;
+            border: 1px solid #b9d9c4;
+        }
+
+        .home-message.error {
+            background: #f9e5e5;
+            color: #7a2d2d;
+            border: 1px solid #e8bcbc;
+        }
+
+
+        /* =========================================================
+           PRODUTO INDISPONÍVEL
+           ========================================================= */
+
+        .button-product-disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .stock-info {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.78rem;
+            color: #708077;
+        }
+
+        .stock-info.out-of-stock {
+            color: #a23b3b;
+        }
+
+        .empty-catalog {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #f7f8f6;
+            border-radius: 16px;
+            color: #617068;
+        }
+
+        .empty-catalog i {
+            display: block;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #8da397;
+        }
+
+
+        /* =========================================================
+           CHATBOT
+           ========================================================= */
+
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #2d4a3e;
+            color: #f0ebe5;
+            border: 1px solid #4a6b5a;
+            border-radius: 60px;
+            padding: 0.8rem 1.5rem 0.8rem 1.2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            z-index: 999;
+            transition: 0.25s;
+        }
+
+        .chat-toggle-btn:hover {
+            background: #3a5f4f;
+            transform: scale(1.02);
+        }
+
+        .chat-toggle-btn i {
+            font-size: 1.4rem;
+        }
+
+        .chat-sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 380px;
+            max-width: 90vw;
+            height: 100vh;
+            background: #f5f7f4;
+            box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            transform: translateX(110%);
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #bccfc4;
+        }
+
+        .chat-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .chat-header {
+            padding: 1.2rem 1.5rem;
+            background: #2d4a3e;
+            color: #f0ebe5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #4a6b5a;
+            flex-shrink: 0;
+        }
+
+        .chat-header h3 {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            color: #f0ebe5;
+        }
+
+        .chat-header h3 i {
+            font-size: 1.3rem;
+            color: #8fb5a0;
+        }
+
+        .chat-close {
+            background: transparent;
+            border: none;
+            color: #bccfc4;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0.2rem;
+            transition: color 0.2s;
+        }
+
+        .chat-close:hover {
+            color: #f5ede7;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem 1.2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: #eef3ef;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 0.7rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            animation: fadeUp 0.2s ease;
+        }
+
+        .message.bot {
+            background: #d4e3db;
+            color: #1e2c26;
+            align-self: flex-start;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.user {
+            background: #2d4a3e;
+            color: #f0ebe5;
+            align-self: flex-end;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message .time {
+            font-size: 0.6rem;
+            opacity: 0.6;
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .chat-input-area {
+            padding: 0.8rem 1.2rem 1.2rem;
+            background: #f5f7f4;
+            border-top: 1px solid #bccfc4;
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #bccfc4;
+            background: #f5f7f4;
+            font-size: 0.9rem;
+            outline: none;
+            color: #1e2c26;
+        }
+
+        .chat-input-area input::placeholder {
+            color: #7a9586;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #5a8a73;
+        }
+
+        .chat-input-area button {
+            background: #2d4a3e;
+            color: #f0ebe5;
+            border: none;
+            border-radius: 40px;
+            padding: 0 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .chat-input-area button:hover {
+            background: #3a5f4f;
+        }
+
+        @keyframes fadeUp {
+
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+
+        .chat-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        @media (max-width: 600px) {
+
+            .chat-sidebar {
+                width: 100vw;
+                max-width: 100vw;
+            }
+
+            .client-selector-area {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .client-selector {
+                max-width: none;
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =============================================================
+     CABEÇALHO
+     ============================================================= -->
+
+<header class="shop-header">
+
+    <div class="shop-header-main">
+
+
+        <!-- MARCA -->
+
+        <a class="brand"
+           th:href="@{/home}"
+           href="/home">
+
+            <span class="brand-mark">
+                <i class="bi bi-book-half"></i>
+            </span>
+
+            <span>BookNexus</span>
+
+        </a>
+
+
+        <!-- BUSCA -->
+
+        <label class="search-box"
+               aria-label="Buscar livros">
+
+            <i class="bi bi-search"></i>
+
+            <input
+                    type="search"
+                    id="productSearch"
+                    placeholder="Qual história você procura hoje?"
+                    autocomplete="off">
+
+        </label>
+
+
+        <!-- =====================================================
+             SELEÇÃO DO CLIENTE
+             ===================================================== -->
+
+        <div class="client-selector-area">
+
+            <i class="bi bi-person-check"></i>
+
+            <select
+                    id="clienteSelector"
+                    class="client-selector"
+                    aria-label="Selecionar cliente">
+
+                <option value="">
+                    Selecione o cliente
+                </option>
+
+
+                <option
+                        th:each="cliente : ${clientes}"
+                        th:value="${cliente.id}"
+                        th:text="${cliente.nome}"
+                        th:if="${cliente.inativado == null or !cliente.inativado}">
+
+                    Cliente
+
+                </option>
+
+            </select>
+
+
+            <span
+                    id="clienteSelecionadoTexto"
+                    class="client-selected-message">
+            </span>
+
+        </div>
+
+
+        <!-- =====================================================
+             AÇÕES DA CONTA
+             ===================================================== -->
+
+        <nav
+                class="header-links"
+                aria-label="Ações da conta">
+
+
+            <!--
+                MINHA CONTA / PEDIDOS
+
+                O cliente selecionado será enviado por JavaScript:
+
+                /pedidos?clienteId=5
+
+                O PedidoController receberá o ID e registrará
+                "clienteAtual" na HttpSession.
+            -->
+
+            <a
+                    id="pedidosLink"
+                    href="/pedidos"
+                    onclick="return abrirPedidos(event);">
+
+                <i class="bi bi-person-circle"></i>
+
+                <span>Minha conta</span>
+
+            </a>
+
+
+            <!--
+                CARRINHO
+
+                O cliente selecionado também é enviado:
+
+                /carrinho?clienteId=5
+            -->
+
+            <a
+                    class="cart-link"
+                    id="carrinhoLink"
+                    href="/carrinho"
+                    onclick="return abrirCarrinho(event);">
+
+                <i class="bi bi-bag-heart"></i>
+
+                <span>Carrinho</span>
+
+
+                <!--
+                    Sem expressão ternária Thymeleaf.
+
+                    Quando quantidadeCarrinho existir,
+                    utiliza o valor recebido do backend.
+                -->
+
+                <b
+                        class="cart-count"
+                        th:if="${quantidadeCarrinho != null}"
+                        th:text="${quantidadeCarrinho}">
+                    0
+                </b>
+
+
+                <!--
+                    Quando o backend não fornecer quantidade,
+                    mostra zero.
+                -->
+
+                <b
+                        class="cart-count"
+                        th:unless="${quantidadeCarrinho != null}">
+                    0
+                </b>
+
+            </a>
+
+
+            <!-- SAIR -->
+
+            <a
+                    href="/login.html"
+                    title="Voltar à escolha de acesso">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>Sair</span>
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <!-- =========================================================
+         NAVEGAÇÃO
+         ========================================================= -->
+
+    <nav
+            class="shop-nav"
+            aria-label="Categorias da loja">
+
+        <a
+                class="active"
+                th:href="@{/home}"
+                href="/home">
+
+            Início
+
+        </a>
+
+
+        <a href="#catalogo">
+            Lançamentos
+        </a>
+
+
+        <a href="#catalogo">
+            Mais lidos
+        </a>
+
+
+        <a href="#catalogo">
+            Ficção
+        </a>
+
+
+        <a href="#catalogo">
+            Não ficção
+        </a>
+
+
+        <a href="#catalogo">
+            Ofertas
+        </a>
+
+    </nav>
+
+</header>
+
+
+<!-- =============================================================
+     MENSAGENS DO BACKEND
+     ============================================================= -->
+
+
+<div
+        th:if="${mensagemSucesso}"
+        class="home-message success">
+
+    <i class="bi bi-check-circle-fill"></i>
+
+    <span th:text="${mensagemSucesso}">
+    </span>
+
+</div>
+
+
+<div
+        th:if="${mensagemErro}"
+        class="home-message error">
+
+    <i class="bi bi-exclamation-circle-fill"></i>
+
+    <span th:text="${mensagemErro}">
+    </span>
+
+</div>
+
+
+<!--
+    Compatibilidade com mensagens enviadas pelos
+    demais controllers.
+-->
+
+<div
+        th:if="${sucesso}"
+        class="home-message success">
+
+    <i class="bi bi-check-circle-fill"></i>
+
+    <span th:text="${sucesso}">
+    </span>
+
+</div>
+
+
+<div
+        th:if="${erro}"
+        class="home-message error">
+
+    <i class="bi bi-exclamation-circle-fill"></i>
+
+    <span th:text="${erro}">
+    </span>
+
+</div>
+
+
+<!-- =============================================================
+     CONTEÚDO
+     ============================================================= -->
+
+<main>
+
+
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <section class="shop-hero">
+
+        <div class="hero-inner">
+
+            <div>
+
+                <p class="eyebrow light">
+
+                    <i class="bi bi-bookmark-star-fill"></i>
+
+                    Curadoria BookNexus
+
+                </p>
+
+
+                <h1>
+                    Livros que expandem o seu universo.
+                </h1>
+
+
+                <p>
+                    Encontre histórias marcantes, conhecimento inspirador
+                    e a sua próxima leitura favorita em um só lugar.
+                </p>
+
+
+                <div class="hero-actions">
+
+                    <a
+                            class="button button-light"
+                            href="#catalogo">
+
+                        <i class="bi bi-collection"></i>
+
+                        Explorar catálogo
+
+                    </a>
+
+
+                    <a
+                            class="button button-ghost"
+                            href="#destaque">
+
+                        <i class="bi bi-star"></i>
+
+                        Ver destaque
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div
+                    class="hero-book-display"
+                    id="destaque"
+                    aria-label="Livro em destaque">
+
+                <div class="featured-book">
+
+                    <span>
+                        Clube de leitura
+                    </span>
+
+                    <strong>
+                        Entre<br>
+                        páginas
+                    </strong>
+
+                    <small>
+                        Uma seleção para descobrir
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         CATÁLOGO
+         ========================================================= -->
+
+    <section
+            class="catalog-section"
+            id="catalogo"
+            aria-labelledby="catalog-title">
+
+
+        <div class="section-head">
+
+            <div>
+
+                <p class="eyebrow">
+
+                    <i class="bi bi-bookmarks-fill"></i>
+
+                    Vitrine da semana
+
+                </p>
+
+
+                <h2 id="catalog-title">
+                    Leituras para todos os universos
+                </h2>
+
+            </div>
+
+
+            <a href="#catalogo">
+
+                Ver catálogo completo
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+
+        <!-- =====================================================
+             FILTROS VISUAIS
+             ===================================================== -->
+
+        <nav
+                class="category-list"
+                aria-label="Filtrar por categoria">
+
+            <a
+                    class="category-pill active"
+                    href="#catalogo">
+
+                Todos
+
+            </a>
+
+
+            <a
+                    class="category-pill"
+                    href="#catalogo">
+
+                Romance
+
+            </a>
+
+
+            <a
+                    class="category-pill"
+                    href="#catalogo">
+
+                Fantasia
+
+            </a>
+
+
+            <a
+                    class="category-pill"
+                    href="#catalogo">
+
+                Tecnologia
+
+            </a>
+
+
+            <a
+                    class="category-pill"
+                    href="#catalogo">
+
+                Biografias
+
+            </a>
+
+        </nav>
+
+
+        <!-- =====================================================
+             PRODUTOS
+             ===================================================== -->
+
+        <div
+                class="book-grid"
+                id="bookGrid">
+
+
+            <!-- CATÁLOGO VAZIO -->
+
+            <div
+                    class="empty-catalog"
+                    th:if="${produtos == null or #lists.isEmpty(produtos)}">
+
+                <i class="bi bi-journal-x"></i>
+
+
+                <h3>
+                    Nenhum produto disponível
+                </h3>
+
+
+                <p>
+                    Não existem livros disponíveis para venda no momento.
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 PRODUTO
+                 ================================================= -->
+
+            <article
+                    class="book-card"
+                    th:each="produto, iterStat : ${produtos}"
+                    th:if="${produto.ativo}"
+                    th:data-titulo="${produto.titulo}"
+                    th:data-autor="${produto.autor}">
+
+
+                <!-- CAPA -->
+
+                <div class="book-visual">
+
+                    <div class="book-cover cover-rain">
+
+                        <span>
+                            BookNexus
+                        </span>
+
+
+                        <b th:text="${produto.titulo}">
+                            Título do livro
+                        </b>
+
+
+                        <span th:text="${produto.autor}">
+                            Autor
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- INFORMAÇÕES -->
+
+                <div class="book-info">
+
+                    <span class="book-tag">
+                        Livro
+                    </span>
+
+
+                    <h3 th:text="${produto.titulo}">
+                        Título do livro
+                    </h3>
+
+
+                    <p th:text="${produto.autor}">
+                        Autor
+                    </p>
+
+
+                    <!-- PREÇO -->
+
+                    <div class="price-line">
+
+                        <strong
+                                th:if="${produto.preco != null}"
+                                th:text="${'R$ ' + #numbers.formatDecimal(produto.preco, 1, 2, 'COMMA')}">
+
+                            R$ 0,00
+
+                        </strong>
+
+
+                        <strong
+                                th:if="${produto.preco == null}">
+
+                            Preço indisponível
+
+                        </strong>
+
+                    </div>
+
+
+                    <!-- ESTOQUE -->
+
+                    <span
+                            class="stock-info"
+                            th:if="${produto.estoque != null and produto.estoque > 0}"
+                            th:text="${produto.estoque + ' unidade(s) disponível(is)'}">
+                    </span>
+
+
+                    <span
+                            class="stock-info out-of-stock"
+                            th:if="${produto.estoque == null or produto.estoque <= 0}">
+
+                        Produto indisponível
+
+                    </span>
+
+
+                    <!-- =================================================
+                         ADICIONAR AO CARRINHO
+                         ================================================= -->
+
+                    <form
+                            th:if="${produto.estoque != null and produto.estoque > 0}"
+                            th:action="@{/carrinho/adicionar}"
+                            action="/carrinho/adicionar"
+                            method="post"
+                            class="add-cart-form"
+                            onsubmit="return prepararAdicaoCarrinho(this);">
+
+
+                        <input
+                                type="hidden"
+                                name="produtoId"
+                                th:value="${produto.id}">
+
+
+                        <input
+                                type="hidden"
+                                name="quantidade"
+                                value="1">
+
+
+                        <!--
+                            Preenchido pelo JavaScript com
+                            o cliente selecionado.
+                        -->
+
+                        <input
+                                type="hidden"
+                                name="clienteId"
+                                class="cliente-id-carrinho"
+                                value="">
+
+
+                        <button
+                                type="submit"
+                                class="button button-primary">
+
+                            <i class="bi bi-bag-plus"></i>
+
+                            Adicionar
+
+                        </button>
+
+                    </form>
+
+
+                    <!-- PRODUTO SEM ESTOQUE -->
+
+                    <button
+                            th:if="${produto.estoque == null or produto.estoque <= 0}"
+                            type="button"
+                            class="button button-primary button-product-disabled"
+                            disabled>
+
+                        <i class="bi bi-bag-x"></i>
+
+                        Indisponível
+
+                    </button>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =============================================================
+     RODAPÉ
+     ============================================================= -->
+
+<footer class="shop-footer">
+
+    <strong>
+        BookNexus
+    </strong>
+
+    ·
+
+    <a href="/admin-home.html">
+        Acessar área administrativa
+    </a>
+
+</footer>
+
+
+<!-- =============================================================
+     CHATBOT
+     ============================================================= -->
+
+
+<button
+        class="chat-toggle-btn"
+        id="chatToggleBtn"
+        aria-label="Abrir chatbot">
+
+    <i class="bi bi-chat-dots-fill"></i>
+
+    Chat
+
+</button>
+
+
+<div
+        class="chat-overlay"
+        id="chatOverlay">
+</div>
+
+
+<aside
+        class="chat-sidebar"
+        id="chatSidebar"
+        role="dialog"
+        aria-label="Chatbot BookNexus">
+
+    <div class="chat-header">
+
+        <h3>
+
+            <i class="bi bi-robot"></i>
+
+            BookNexus Bot
+
+        </h3>
+
+
+        <button
+                class="chat-close"
+                id="chatCloseBtn"
+                aria-label="Fechar chat">
+
+            &times;
+
+        </button>
+
+    </div>
+
+
+    <div
+            class="chat-messages"
+            id="chatMessages">
+
+        <div class="message bot">
+
+            Olá! Sou o assistente da BookNexus.
+
+            <br>
+
+            Posso ajudar com recomendações ou dúvidas sobre pedidos.
+
+
+            <span class="time">
+                agora
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="chat-input-area">
+
+        <input
+                type="text"
+                id="chatInput"
+                placeholder="Digite sua mensagem..."
+                aria-label="Digite sua mensagem">
+
+
+        <button
+                type="button"
+                id="chatSendBtn">
+
+            <i class="bi bi-send-fill"></i>
+
+            Enviar
+
+        </button>
+
+    </div>
+
+</aside>
+
+
+<!-- =============================================================
+     JAVASCRIPT
+     ============================================================= -->
+
+<script>
+
+    /* =============================================================
+       CLIENTE SELECIONADO
+       ============================================================= */
+
+    const CLIENTE_STORAGE_KEY =
+        'booknexusClienteSelecionado';
+
+
+    const CLIENTE_NOME_STORAGE_KEY =
+        'booknexusClienteSelecionadoNome';
+
+
+    const clienteSelector =
+        document.getElementById(
+            'clienteSelector'
+        );
+
+
+    const clienteSelecionadoTexto =
+        document.getElementById(
+            'clienteSelecionadoTexto'
+        );
+
+
+    /**
+     * Retorna o ID do cliente atualmente selecionado.
+     */
+    function obterClienteSelecionado() {
+
+        return sessionStorage.getItem(
+            CLIENTE_STORAGE_KEY
+        );
+    }
+
+
+    /**
+     * Atualiza todos os inputs hidden utilizados
+     * pelos formulários de adição ao carrinho.
+     */
+    function atualizarClienteNosFormularios() {
+
+        const clienteId =
+            obterClienteSelecionado();
+
+
+        document
+            .querySelectorAll(
+                '.cliente-id-carrinho'
+            )
+            .forEach(input => {
+
+                input.value =
+                    clienteId || '';
+
+            });
+    }
+
+
+    /**
+     * Exibe visualmente qual cliente está
+     * realizando a compra.
+     */
+    function atualizarClienteSelecionadoTexto() {
+
+        const clienteId =
+            sessionStorage.getItem(
+                CLIENTE_STORAGE_KEY
+            );
+
+
+        const clienteNome =
+            sessionStorage.getItem(
+                CLIENTE_NOME_STORAGE_KEY
+            );
+
+
+        if (clienteId && clienteNome) {
+
+            clienteSelecionadoTexto.textContent =
+                `Comprando como ${clienteNome}`;
+
+        } else {
+
+            clienteSelecionadoTexto.textContent =
+                '';
+        }
+    }
+
+
+    /**
+     * Restaura o cliente selecionado anteriormente
+     * ao retornar para a Home.
+     */
+    function restaurarClienteSelecionado() {
+
+        const clienteId =
+            sessionStorage.getItem(
+                CLIENTE_STORAGE_KEY
+            );
+
+
+        if (!clienteId) {
+
+            atualizarClienteNosFormularios();
+
+            atualizarClienteSelecionadoTexto();
+
+            return;
+        }
+
+
+        const option =
+            Array
+                .from(
+                    clienteSelector.options
+                )
+                .find(
+                    item =>
+                        item.value === clienteId
+                );
+
+
+        /*
+         * O cliente salvo pode ter sido inativado ou
+         * removido da lista desde a última navegação.
+         */
+        if (!option) {
+
+            sessionStorage.removeItem(
+                CLIENTE_STORAGE_KEY
+            );
+
+
+            sessionStorage.removeItem(
+                CLIENTE_NOME_STORAGE_KEY
+            );
+
+
+            clienteSelector.value =
+                '';
+
+
+            atualizarClienteNosFormularios();
+
+            atualizarClienteSelecionadoTexto();
+
+
+            return;
+        }
+
+
+        clienteSelector.value =
+            clienteId;
+
+
+        atualizarClienteNosFormularios();
+
+        atualizarClienteSelecionadoTexto();
+    }
+
+
+    /**
+     * Salva a seleção sempre que o usuário
+     * troca de cliente.
+     */
+    clienteSelector.addEventListener(
+        'change',
+        function () {
+
+            const clienteId =
+                this.value;
+
+
+            if (!clienteId) {
+
+                sessionStorage.removeItem(
+                    CLIENTE_STORAGE_KEY
+                );
+
+
+                sessionStorage.removeItem(
+                    CLIENTE_NOME_STORAGE_KEY
+                );
+
+
+                atualizarClienteNosFormularios();
+
+                atualizarClienteSelecionadoTexto();
+
+
+                return;
+            }
+
+
+            const clienteNome =
+                this.options[
+                    this.selectedIndex
+                    ].text;
+
+
+            sessionStorage.setItem(
+                CLIENTE_STORAGE_KEY,
+                clienteId
+            );
+
+
+            sessionStorage.setItem(
+                CLIENTE_NOME_STORAGE_KEY,
+                clienteNome
+            );
+
+
+            atualizarClienteNosFormularios();
+
+            atualizarClienteSelecionadoTexto();
+        }
+    );
+
+
+    /* =============================================================
+       ACESSAR PEDIDOS / MINHA CONTA
+       ============================================================= */
+
+    /**
+     * Abre a página de pedidos do cliente
+     * atualmente selecionado.
+     *
+     * O clienteId é enviado ao PedidoController:
+     *
+     * /pedidos?clienteId=5
+     *
+     * O controller poderá então registrar o cliente
+     * na HttpSession como "clienteAtual".
+     */
+    function abrirPedidos(event) {
+
+        event.preventDefault();
+
+
+        const clienteId =
+            obterClienteSelecionado();
+
+
+        if (!clienteId) {
+
+            alert(
+                'Selecione um cliente antes de visualizar os pedidos.'
+            );
+
+
+            clienteSelector.focus();
+
+
+            return false;
+        }
+
+
+        window.location.href =
+            '/pedidos?clienteId='
+            +
+            encodeURIComponent(
+                clienteId
+            );
+
+
+        return false;
+    }
+
+
+    /* =============================================================
+       ACESSAR CARRINHO
+       ============================================================= */
+
+    /**
+     * Abre o carrinho correspondente ao cliente
+     * atualmente selecionado.
+     */
+    function abrirCarrinho(event) {
+
+        event.preventDefault();
+
+
+        const clienteId =
+            obterClienteSelecionado();
+
+
+        if (!clienteId) {
+
+            alert(
+                'Selecione um cliente antes de acessar o carrinho.'
+            );
+
+
+            clienteSelector.focus();
+
+
+            return false;
+        }
+
+
+        window.location.href =
+            '/carrinho?clienteId='
+            +
+            encodeURIComponent(
+                clienteId
+            );
+
+
+        return false;
+    }
+
+
+    /* =============================================================
+       ADICIONAR PRODUTO AO CARRINHO
+       ============================================================= */
+
+    function prepararAdicaoCarrinho(form) {
+
+        const clienteId =
+            obterClienteSelecionado();
+
+
+        if (!clienteId) {
+
+            alert(
+                'Selecione um cliente antes de adicionar produtos ao carrinho.'
+            );
+
+
+            clienteSelector.focus();
+
+
+            return false;
+        }
+
+
+        const clienteInput =
+            form.querySelector(
+                '.cliente-id-carrinho'
+            );
+
+
+        if (clienteInput) {
+
+            clienteInput.value =
+                clienteId;
+        }
+
+
+        const botao =
+            form.querySelector(
+                'button[type="submit"]'
+            );
+
+
+        if (botao) {
+
+            botao.disabled =
+                true;
+
+
+            botao.innerHTML =
+                '<i class="bi bi-hourglass-split"></i> Adicionando...';
+        }
+
+
+        return true;
+    }
+
+
+    /* =============================================================
+       BUSCA LOCAL NO CATÁLOGO
+       ============================================================= */
+
+    const productSearch =
+        document.getElementById(
+            'productSearch'
+        );
+
+
+    if (productSearch) {
+
+        productSearch.addEventListener(
+            'input',
+            function () {
+
+                const termo =
+                    this.value
+                        .trim()
+                        .toLowerCase();
+
+
+                document
+                    .querySelectorAll(
+                        '.book-card'
+                    )
+                    .forEach(card => {
+
+                        const titulo =
+                            (
+                                card.dataset.titulo
+                                ||
+                                ''
+                            )
+                                .toLowerCase();
+
+
+                        const autor =
+                            (
+                                card.dataset.autor
+                                ||
+                                ''
+                            )
+                                .toLowerCase();
+
+
+                        const corresponde =
+                            titulo.includes(
+                                termo
+                            )
+                            ||
+                            autor.includes(
+                                termo
+                            );
+
+
+                        if (corresponde) {
+
+                            card.style.display =
+                                '';
+
+                        } else {
+
+                            card.style.display =
+                                'none';
+                        }
+                    });
+            }
+        );
+    }
+
+
+    /* =============================================================
+       INICIALIZAÇÃO
+       ============================================================= */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            restaurarClienteSelecionado();
+
+        }
+    );
+
+
+    /* =============================================================
+       CHATBOT
+       ============================================================= */
+
+    (function () {
+
+        const chatSidebar =
+            document.getElementById(
+                'chatSidebar'
+            );
+
+
+        const chatOverlay =
+            document.getElementById(
+                'chatOverlay'
+            );
+
+
+        const chatToggleBtn =
+            document.getElementById(
+                'chatToggleBtn'
+            );
+
+
+        const chatCloseBtn =
+            document.getElementById(
+                'chatCloseBtn'
+            );
+
+
+        const chatMessages =
+            document.getElementById(
+                'chatMessages'
+            );
+
+
+        const chatInput =
+            document.getElementById(
+                'chatInput'
+            );
+
+
+        const chatSendBtn =
+            document.getElementById(
+                'chatSendBtn'
+            );
+
+
+        function openChat() {
+
+            chatSidebar.classList.add(
+                'open'
+            );
+
+
+            chatOverlay.classList.add(
+                'active'
+            );
+
+
+            setTimeout(
+                () => chatInput.focus(),
+                150
+            );
+        }
+
+
+        function closeChat() {
+
+            chatSidebar.classList.remove(
+                'open'
+            );
+
+
+            chatOverlay.classList.remove(
+                'active'
+            );
+        }
+
+
+        chatToggleBtn.addEventListener(
+            'click',
+            function (event) {
+
+                event.stopPropagation();
+
+
+                if (
+                    chatSidebar.classList.contains(
+                        'open'
+                    )
+                ) {
+
+                    closeChat();
+
+                } else {
+
+                    openChat();
+                }
+            }
+        );
+
+
+        chatCloseBtn.addEventListener(
+            'click',
+            closeChat
+        );
+
+
+        chatOverlay.addEventListener(
+            'click',
+            closeChat
+        );
+
+
+        function addMessage(
+            text,
+            sender = 'user'
+        ) {
+
+            const msgDiv =
+                document.createElement(
+                    'div'
+                );
+
+
+            msgDiv.className =
+                `message ${sender}`;
+
+
+            const now =
+                new Date();
+
+
+            const timeStr =
+                now
+                    .getHours()
+                    .toString()
+                    .padStart(
+                        2,
+                        '0'
+                    )
+                +
+                ':'
+                +
+                now
+                    .getMinutes()
+                    .toString()
+                    .padStart(
+                        2,
+                        '0'
+                    );
+
+
+            /*
+             * O texto digitado é inserido como texto,
+             * evitando interpretar HTML fornecido pelo usuário.
+             */
+
+            const textoMensagem =
+                document.createTextNode(
+                    text + ' '
+                );
+
+
+            const horario =
+                document.createElement(
+                    'span'
+                );
+
+
+            horario.className =
+                'time';
+
+
+            horario.textContent =
+                timeStr;
+
+
+            msgDiv.appendChild(
+                textoMensagem
+            );
+
+
+            msgDiv.appendChild(
+                horario
+            );
+
+
+            chatMessages.appendChild(
+                msgDiv
+            );
+
+
+            chatMessages.scrollTop =
+                chatMessages.scrollHeight;
+        }
+
+
+        function sendMessage() {
+
+            const text =
+                chatInput.value.trim();
+
+
+            if (text === '') {
+
+                return;
+            }
+
+
+            addMessage(
+                text,
+                'user'
+            );
+
+
+            chatInput.value =
+                '';
+        }
+
+
+        chatSendBtn.addEventListener(
+            'click',
+            sendMessage
+        );
+
+
+        chatInput.addEventListener(
+            'keypress',
+            function (event) {
+
+                if (event.key === 'Enter') {
+
+                    event.preventDefault();
+
+                    sendMessage();
+                }
+            }
+        );
+
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+
+                if (
+                    event.key === 'Escape'
+                    &&
+                    chatSidebar.classList.contains(
+                        'open'
+                    )
+                ) {
+
+                    closeChat();
+                }
+            }
+        );
+
+    })();
+
+</script>
+
+
+</body>
+</html>

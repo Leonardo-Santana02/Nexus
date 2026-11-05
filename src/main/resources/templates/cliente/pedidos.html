@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Meus pedidos | BookNexus</title>
+
+    <link rel="preconnect"
+          href="https://cdn.jsdelivr.net">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/prototype.css}"
+          href="/css/prototype.css">
+
+
+    <!-- =========================================================
+         ESTILOS ESPECÍFICOS DA TELA
+         ========================================================= -->
+
+    <style>
+
+        /* =========================================================
+           ABAS / FILTROS
+           ========================================================= */
+
+        .order-tabs {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .order-tabs button {
+            appearance: none;
+            -webkit-appearance: none;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+
+            min-height: 42px;
+            padding: 0.65rem 1.1rem;
+
+            border: 1px solid #bccfc4;
+            border-radius: 999px;
+
+            background: #ffffff;
+            color: #2d4a3e;
+
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                    background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease,
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+        }
+
+        .order-tabs button:hover {
+            background: #eef3ef;
+            border-color: #8eaa9b;
+            transform: translateY(-1px);
+        }
+
+        .order-tabs button:focus-visible {
+            outline: 3px solid rgba(90, 138, 115, 0.2);
+            outline-offset: 2px;
+        }
+
+        .order-tabs button.active {
+            background: #2d4a3e;
+            border-color: #2d4a3e;
+            color: #ffffff;
+
+            box-shadow:
+                    0 5px 14px
+                    rgba(45, 74, 62, 0.18);
+        }
+
+        .order-tabs button span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 24px;
+            height: 24px;
+            padding: 0 0.4rem;
+
+            border-radius: 999px;
+
+            background: #e4ece7;
+            color: #2d4a3e;
+
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .order-tabs button.active span {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+
+        /* =========================================================
+           CAPAS DOS LIVROS
+           ========================================================= */
+
+        .order-cover-pair {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            padding-right: 0.4rem;
+        }
+
+        .order-cover-pair .mini-cover {
+            margin-left: -12px;
+        }
+
+        .order-cover-pair .mini-cover:first-child {
+            margin-left: 0;
+        }
+
+        .mini-cover {
+            position: relative;
+
+            width: 62px;
+            height: 84px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+
+            border-radius: 7px;
+
+            background:
+                    linear-gradient(
+                            145deg,
+                            #355d4c,
+                            #5f8b75
+                    );
+
+            border: 2px solid #ffffff;
+
+            box-shadow:
+                    0 5px 12px
+                    rgba(31, 53, 44, 0.16);
+        }
+
+        .mini-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .mini-cover-placeholder {
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+
+            box-sizing: border-box;
+
+            padding: 0.5rem 0.35rem;
+
+            text-align: center;
+            color: #f4f1eb;
+
+            background:
+                    linear-gradient(
+                            145deg,
+                            #355d4c,
+                            #5f8b75
+                    );
+        }
+
+        .mini-cover-brand {
+            width: 100%;
+
+            overflow: hidden;
+
+            font-size: 0.46rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+
+            text-transform: uppercase;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            opacity: 0.82;
+        }
+
+        .mini-cover-title {
+            width: 100%;
+
+            display: -webkit-box;
+
+            overflow: hidden;
+
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1.15;
+
+            word-break: break-word;
+        }
+
+        .mini-cover-placeholder i {
+            font-size: 0.8rem;
+            opacity: 0.75;
+        }
+
+
+        /* =========================================================
+           MODAL / POP-UP
+           ========================================================= */
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+
+            z-index: 2000;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 1.5rem;
+
+            background: rgba(19, 31, 26, 0.58);
+            backdrop-filter: blur(3px);
+
+            overflow-y: auto;
+        }
+
+        .modal-overlay[hidden] {
+            display: none;
+        }
+
+        .modal-card {
+            width: min(900px, 100%);
+            max-height: calc(100vh - 3rem);
+
+            display: flex;
+            flex-direction: column;
+
+            overflow: hidden;
+
+            background: #ffffff;
+
+            border: 1px solid #d8e2dc;
+            border-radius: 18px;
+
+            box-shadow:
+                    0 24px 70px
+                    rgba(17, 31, 24, 0.28);
+
+            animation: pedidoModalEntrada 0.2s ease-out;
+        }
+
+        @keyframes pedidoModalEntrada {
+
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.985);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+
+            padding: 1.4rem 1.5rem;
+
+            background: #f7f9f7;
+
+            border-bottom: 1px solid #dce5df;
+        }
+
+        .modal-header h2 {
+            margin: 0.25rem 0 0;
+
+            color: #243a31;
+        }
+
+        .modal-header .eyebrow {
+            margin: 0;
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+
+            flex-shrink: 0;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border: 1px solid #d0ddd5;
+            border-radius: 50%;
+
+            background: #ffffff;
+            color: #365446;
+
+            font-size: 1rem;
+
+            cursor: pointer;
+
+            transition:
+                    background-color 0.2s ease,
+                    color 0.2s ease,
+                    transform 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #2d4a3e;
+            color: #ffffff;
+            transform: rotate(4deg);
+        }
+
+        #modalPedidoCarregando {
+            padding: 3rem 1.5rem;
+        }
+
+        #modalPedidoErro {
+            margin: 1.25rem 1.5rem;
+        }
+
+        #modalPedidoConteudo {
+            padding: 0 1.5rem 1.5rem;
+
+            overflow-y: auto;
+        }
+
+        .order-detail-section {
+            padding: 1.4rem 0;
+
+            border-bottom: 1px solid #e1e8e4;
+        }
+
+        .order-detail-section:last-child {
+            border-bottom: 0;
+        }
+
+        .order-detail-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            margin: 0 0 1rem;
+
+            color: #2d4a3e;
+
+            font-size: 1rem;
+        }
+
+        .order-detail-section h3 i {
+            color: #5f8b75;
+        }
+
+        .order-detail-grid {
+            display: grid;
+
+            grid-template-columns:
+                    repeat(
+                            3,
+                            minmax(0, 1fr)
+                    );
+
+            gap: 0.85rem;
+        }
+
+        .order-detail-grid > div {
+            padding: 0.9rem 1rem;
+
+            background: #f7f9f7;
+
+            border: 1px solid #e0e8e3;
+            border-radius: 10px;
+        }
+
+        .order-detail-grid span {
+            display: block;
+
+            margin-bottom: 0.25rem;
+
+            color: #738179;
+
+            font-size: 0.75rem;
+        }
+
+        .order-detail-grid strong {
+            color: #253b32;
+
+            font-size: 0.9rem;
+        }
+
+
+        /* =========================================================
+           PRODUTOS DO MODAL
+           ========================================================= */
+
+        .order-detail-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .order-detail-item {
+            display: grid;
+
+            grid-template-columns:
+                    auto
+                    minmax(0, 1fr)
+                    auto;
+
+            align-items: center;
+
+            gap: 1rem;
+
+            padding: 0.9rem;
+
+            background: #f8faf8;
+
+            border: 1px solid #e0e8e3;
+            border-radius: 12px;
+        }
+
+        .order-detail-item .mini-cover {
+            width: 66px;
+            height: 90px;
+
+            margin: 0;
+
+            border-width: 1px;
+        }
+
+        .order-detail-item > div:nth-child(2) {
+            min-width: 0;
+        }
+
+        .order-detail-item > div:nth-child(2) > strong {
+            display: block;
+
+            margin-bottom: 0.3rem;
+
+            color: #263d33;
+        }
+
+        .order-detail-item p {
+            margin: 0.15rem 0;
+
+            color: #68786f;
+
+            font-size: 0.82rem;
+        }
+
+        .order-detail-item > strong:last-child {
+            white-space: nowrap;
+
+            color: #2d4a3e;
+        }
+
+
+        /* =========================================================
+           ENDEREÇO
+           ========================================================= */
+
+        .order-detail-address {
+            padding: 1rem;
+
+            background: #f7f9f7;
+
+            border: 1px solid #e0e8e3;
+            border-radius: 10px;
+        }
+
+        .order-detail-address strong {
+            color: #263d33;
+        }
+
+        .order-detail-address p {
+            margin: 0.35rem 0 0;
+
+            color: #66766d;
+
+            font-size: 0.86rem;
+        }
+
+
+        /* =========================================================
+           RESUMO FINANCEIRO
+           ========================================================= */
+
+        .order-summary {
+            max-width: 520px;
+
+            margin-left: auto;
+
+            padding: 1rem;
+
+            background: #f7f9f7;
+
+            border: 1px solid #e0e8e3;
+            border-radius: 12px;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+
+            padding: 0.55rem 0;
+
+            color: #52635a;
+        }
+
+        .summary-row + .summary-row {
+            border-top: 1px solid #e0e8e3;
+        }
+
+        .summary-row strong {
+            color: #263d33;
+        }
+
+        .summary-row.discount strong {
+            color: #3d775b;
+        }
+
+        .summary-row:last-child {
+            margin-top: 0.2rem;
+
+            font-size: 1.05rem;
+        }
+
+        .summary-row:last-child strong {
+            color: #2d4a3e;
+
+            font-size: 1.1rem;
+        }
+
+
+        /* =========================================================
+           RODAPÉ DO MODAL
+           ========================================================= */
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+
+            padding: 1rem 1.5rem;
+
+            background: #f7f9f7;
+
+            border-top: 1px solid #dce5df;
+        }
+
+
+        /* =========================================================
+           RESPONSIVIDADE
+           ========================================================= */
+
+        @media (max-width: 760px) {
+
+            .order-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-detail-item {
+                grid-template-columns:
+                        auto
+                        minmax(0, 1fr);
+            }
+
+            .order-detail-item > strong:last-child {
+                grid-column: 2;
+            }
+
+            .modal-overlay {
+                align-items: flex-start;
+
+                padding: 0.75rem;
+            }
+
+            .modal-card {
+                max-height: calc(100vh - 1.5rem);
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .order-tabs {
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .order-tabs button {
+                flex: 1 1 auto;
+
+                padding-left: 0.8rem;
+                padding-right: 0.8rem;
+            }
+
+            .mini-cover {
+                width: 56px;
+                height: 76px;
+            }
+
+            .modal-header,
+            #modalPedidoConteudo,
+            .modal-footer {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .modal-footer {
+                flex-direction: column-reverse;
+            }
+
+            .modal-footer .button {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     CABEÇALHO
+     ========================================================= -->
+
+<header class="shop-header compact-header">
+
+    <div class="shop-header-main">
+
+        <a class="brand"
+           th:href="@{/home(clienteId=${cliente.id})}"
+           href="/home">
+
+            <span class="brand-mark">
+                <i class="bi bi-book-half"></i>
+            </span>
+
+            <span>BookNexus</span>
+
+        </a>
+
+
+        <nav class="header-links"
+             aria-label="Ações da conta">
+
+            <a th:href="@{/home(clienteId=${cliente.id})}"
+               href="/home">
+
+                <i class="bi bi-house-door"></i>
+
+                <span>Loja</span>
+
+            </a>
+
+
+            <a th:href="@{/pedidos(clienteId=${cliente.id})}"
+               href="/pedidos">
+
+                <i class="bi bi-person-circle-fill"></i>
+
+                <span>Minha conta</span>
+
+            </a>
+
+
+            <a class="cart-link"
+               th:href="@{/carrinho(clienteId=${cliente.id})}"
+               href="/carrinho">
+
+                <i class="bi bi-bag-heart"></i>
+
+                <span>Carrinho</span>
+
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     CONTEÚDO PRINCIPAL
+     ========================================================= -->
+
+<main class="subpage">
+
+    <div class="page-shell narrow-shell">
+
+
+        <!-- =================================================
+             BREADCRUMB
+             ================================================= -->
+
+        <nav class="breadcrumb"
+             aria-label="Caminho de navegação">
+
+            <a th:href="@{/home(clienteId=${cliente.id})}"
+               href="/home">
+
+                Início
+
+            </a>
+
+
+            <i class="bi bi-chevron-right"></i>
+
+
+            <span>
+                Meus pedidos
+            </span>
+
+        </nav>
+
+
+        <!-- =================================================
+             CABEÇALHO
+             ================================================= -->
+
+        <div class="page-heading">
+
+            <div>
+
+                <p class="eyebrow">
+
+                    <i class="bi bi-box-seam-fill"></i>
+
+                    Área do cliente
+
+                </p>
+
+
+                <h1>
+                    Meus pedidos
+                </h1>
+
+
+                <p>
+                    Acompanhe suas compras e consulte
+                    os detalhes quando quiser.
+                </p>
+
+            </div>
+
+
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+
+                <a class="button button-ghost"
+                   th:href="@{/devolucoes/minhas}">
+
+                    <i class="bi bi-arrow-repeat"></i>
+
+                    Minhas devoluções
+
+                </a>
+
+
+                <a class="button button-ghost"
+                   th:href="@{/home(clienteId=${cliente.id})}"
+                   href="/home">
+
+                    <i class="bi bi-book"></i>
+
+                    Explorar livros
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             MENSAGENS
+             ================================================= -->
+
+        <div th:if="${mensagemSucesso != null}"
+             class="alert alert-success"
+             role="alert">
+
+            <i class="bi bi-check-circle-fill"></i>
+
+            <span th:text="${mensagemSucesso}">
+                Operação realizada com sucesso.
+            </span>
+
+        </div>
+
+
+        <div th:if="${erro != null}"
+             class="alert alert-danger"
+             role="alert">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span th:text="${erro}">
+                Não foi possível realizar a operação.
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTROS
+             ================================================= -->
+
+        <nav class="order-tabs"
+             aria-label="Filtrar pedidos">
+
+
+            <button type="button"
+                    class="active"
+                    data-filtro="TODOS">
+
+                Todos
+
+                <span th:text="${quantidadePedidos}">
+                    0
+                </span>
+
+            </button>
+
+
+            <button type="button"
+                    data-filtro="EM_PROCESSAMENTO">
+
+                Em andamento
+
+                <span id="quantidadeEmAndamento">
+                    0
+                </span>
+
+            </button>
+
+
+            <button type="button"
+                    data-filtro="FINALIZADOS">
+
+                Finalizados
+
+                <span id="quantidadeFinalizados">
+                    0
+                </span>
+
+            </button>
+
+        </nav>
+
+
+        <!-- =================================================
+             SEM PEDIDOS
+             ================================================= -->
+
+        <section th:if="${#lists.isEmpty(pedidos)}"
+                 class="empty-state">
+
+            <i class="bi bi-box-seam"></i>
+
+
+            <h2>
+                Nenhum pedido encontrado
+            </h2>
+
+
+            <p>
+                Você ainda não realizou nenhuma compra.
+            </p>
+
+
+            <a class="button button-primary"
+               th:href="@{/home(clienteId=${cliente.id})}"
+               href="/home">
+
+                <i class="bi bi-book"></i>
+
+                Explorar livros
+
+            </a>
+
+        </section>
+
+
+        <!-- =================================================
+             LISTA DE PEDIDOS
+             ================================================= -->
+
+        <section th:unless="${#lists.isEmpty(pedidos)}"
+                 class="orders-list"
+                 id="listaPedidos"
+                 aria-label="Lista de pedidos">
+
+
+            <article class="order-card"
+                     th:each="pedido : ${pedidos}"
+                     th:id="'pedido-' + ${pedido.id}"
+                     th:attr="data-status=${pedido.status}">
+
+
+                <!-- =========================================
+                     CABEÇALHO
+                     ========================================= -->
+
+                <div class="order-card-top">
+
+                    <div>
+
+                        <p class="order-code">
+
+                            Pedido #
+
+                            <span th:text="${pedido.id}">
+                                1
+                            </span>
+
+                        </p>
+
+
+                        <span class="order-date">
+
+                            <i class="bi bi-calendar3"></i>
+
+                            Realizado em
+
+                            <span th:text="${#temporals.format(
+                                    pedido.dataCriacao,
+                                    'dd/MM/yyyy HH:mm'
+                            )}">
+
+                                01/01/2026 12:00
+
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- BADGE DE STATUS -->
+                    <span th:switch="${pedido.status.name()}">
+
+                        <span th:case="'EM_PROCESSAMENTO'" class="order-status processing">
+                            <i class="bi bi-hourglass-split"></i>
+                            Em processamento
+                        </span>
+
+                        <span th:case="'APROVADO'" class="order-status processing">
+                            <i class="bi bi-check-circle"></i>
+                            Aprovado
+                        </span>
+
+                        <span th:case="'EM_TRANSPORTE'" class="order-status transit">
+                            <i class="bi bi-truck"></i>
+                            Em transporte
+                        </span>
+
+                        <span th:case="'ENTREGUE'" class="order-status delivered">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Entregue
+                        </span>
+
+                        <span th:case="'EM_TROCA'" class="order-status transit">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Em troca
+                        </span>
+
+                        <span th:case="'TROCA_AUTORIZADA'" class="order-status delivered">
+                            <i class="bi bi-check2-circle"></i>
+                            Troca autorizada
+                        </span>
+
+                        <span th:case="'TROCA_RECUSADA'" class="order-status">
+                            <i class="bi bi-x-octagon-fill"></i>
+                            Troca recusada
+                        </span>
+
+                        <span th:case="'CANCELADO'" class="order-status">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Cancelado
+                        </span>
+
+                        <span th:case="*" class="order-status">
+                            <i class="bi bi-question-circle"></i>
+                            <span th:text="${pedido.status}">Status</span>
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <!-- =========================================
+                     CONTEÚDO
+                     ========================================= -->
+
+                <div class="order-card-main">
+
+
+                    <!-- LIVROS -->
+
+                    <div class="order-books">
+
+
+                        <div class="order-cover-pair">
+
+
+                            <span class="mini-cover"
+                                  th:each="item, iterStat : ${pedido.itens}"
+                                  th:if="${iterStat.index < 2}">
+
+
+                                <img th:if="${item.produto.urlCapa != null and !#strings.isEmpty(item.produto.urlCapa)}"
+                                     th:src="${item.produto.urlCapa}"
+                                     th:alt="${item.produto.titulo}">
+
+
+                                <div th:unless="${item.produto.urlCapa != null and !#strings.isEmpty(item.produto.urlCapa)}"
+                                     class="mini-cover-placeholder">
+
+
+                                    <span class="mini-cover-brand">
+                                        BookNexus
+                                    </span>
+
+
+                                    <strong class="mini-cover-title"
+                                            th:text="${item.produto.titulo}">
+
+                                        Livro
+
+                                    </strong>
+
+
+                                    <i class="bi bi-book-half"></i>
+
+                                </div>
+
+                            </span>
+
+                        </div>
+
+
+                        <div>
+
+
+                            <strong th:if="${pedido.itens.size() == 1}"
+                                    th:text="${pedido.itens[0].produto.titulo}">
+
+                                Livro
+
+                            </strong>
+
+
+                            <strong th:if="${pedido.itens.size() > 1}">
+
+                                <span th:text="${pedido.itens[0].produto.titulo}">
+                                    Livro
+                                </span>
+
+                                e mais
+
+                                <span th:text="${pedido.itens.size() - 1}">
+                                    1
+                                </span>
+
+                                livro(s)
+
+                            </strong>
+
+
+                            <p>
+
+                                <span th:text="${pedido.quantidadeTotalItens}">
+                                    1
+                                </span>
+
+
+                                <span th:if="${pedido.quantidadeTotalItens == 1}">
+                                    item
+                                </span>
+
+
+                                <span th:unless="${pedido.quantidadeTotalItens == 1}">
+                                    itens
+                                </span>
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TOTAL -->
+
+                    <strong class="order-total">
+
+                        R$
+
+                        <span th:text="${#numbers.formatDecimal(
+                                pedido.valorTotal,
+                                1,
+                                'POINT',
+                                2,
+                                'COMMA'
+                        )}">
+
+                            0,00
+
+                        </span>
+
+                    </strong>
+
+
+                    <!-- AÇÕES -->
+
+                    <div class="order-actions">
+
+
+                        <button type="button"
+                                class="button button-ghost"
+                                th:attr="data-pedido-id=${pedido.id}"
+                                onclick="abrirDetalhesPedido(this)">
+
+                            <i class="bi bi-eye"></i>
+
+                            Ver detalhes
+
+                        </button>
+
+
+                        <!-- Solicitar devolução: só quando ENTREGUE -->
+                        <a th:if="${pedido.status.name() == 'ENTREGUE'}"
+                           class="button button-primary"
+                           th:href="@{/devolucoes/solicitar/{id}(id=${pedido.id})}">
+
+                            <i class="bi bi-arrow-counterclockwise"></i>
+
+                            Solicitar devolução
+
+                        </a>
+
+
+                        <!-- Botão desabilitado para os outros status -->
+                        <button th:unless="${pedido.status.name() == 'ENTREGUE'}"
+                                type="button"
+                                class="button button-primary"
+                                disabled
+                                th:title="${'Disponível apenas para pedidos entregues. Status atual: ' + pedido.status.descricao}">
+
+                            <i class="bi bi-arrow-counterclockwise"></i>
+
+                            Solicitar devolução
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- =================================================
+             SEM RESULTADO NO FILTRO
+             ================================================= -->
+
+        <section id="semResultadoFiltro"
+                 class="empty-state"
+                 hidden>
+
+            <i class="bi bi-search"></i>
+
+
+            <h2>
+                Nenhum pedido encontrado
+            </h2>
+
+
+            <p>
+                Não existem pedidos nessa categoria.
+            </p>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<!-- =========================================================
+     POP-UP - DETALHES DO PEDIDO
+     ========================================================= -->
+
+<div id="modalDetalhesPedido"
+     class="modal-overlay"
+     hidden
+     aria-hidden="true">
+
+
+    <div class="modal-card"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="tituloModalPedido">
+
+
+        <!-- =================================================
+             CABEÇALHO DO POP-UP
+             ================================================= -->
+
+        <div class="modal-header">
+
+            <div>
+
+                <p class="eyebrow">
+
+                    <i class="bi bi-box-seam-fill"></i>
+
+                    Detalhes da compra
+
+                </p>
+
+
+                <h2 id="tituloModalPedido">
+
+                    Pedido #
+
+                    <span id="modalPedidoId">
+                        -
+                    </span>
+
+                </h2>
+
+            </div>
+
+
+            <button type="button"
+                    class="modal-close"
+                    aria-label="Fechar detalhes do pedido"
+                    onclick="fecharDetalhesPedido()">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- CARREGAMENTO -->
+
+        <div id="modalPedidoCarregando"
+             class="empty-state">
+
+            <i class="bi bi-hourglass-split"></i>
+
+
+            <p>
+                Carregando informações do pedido...
+            </p>
+
+        </div>
+
+
+        <!-- ERRO -->
+
+        <div id="modalPedidoErro"
+             class="alert alert-danger"
+             hidden>
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+
+            <span id="modalPedidoErroMensagem">
+                Não foi possível carregar o pedido.
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             CONTEÚDO DO POP-UP
+             ================================================= -->
+
+        <div id="modalPedidoConteudo"
+             hidden>
+
+
+            <!-- INFORMAÇÕES DO PEDIDO -->
+
+            <section class="order-detail-section">
+
+                <h3>
+
+                    <i class="bi bi-info-circle"></i>
+
+                    Informações do pedido
+
+                </h3>
+
+
+                <div class="order-detail-grid">
+
+
+                    <div>
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong id="modalStatus">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Data da compra
+                        </span>
+
+                        <strong id="modalDataCriacao">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Quantidade de itens
+                        </span>
+
+                        <strong id="modalQuantidadeItens">
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PRODUTOS -->
+
+            <section class="order-detail-section">
+
+                <h3>
+
+                    <i class="bi bi-book"></i>
+
+                    Produtos
+
+                </h3>
+
+
+                <div id="modalItensPedido"
+                     class="order-detail-items">
+                </div>
+
+            </section>
+
+
+            <!-- ENDEREÇO -->
+
+            <section class="order-detail-section">
+
+                <h3>
+
+                    <i class="bi bi-geo-alt"></i>
+
+                    Endereço de entrega
+
+                </h3>
+
+
+                <div class="order-detail-address">
+
+
+                    <strong id="modalEnderecoPrincipal">
+                        -
+                    </strong>
+
+
+                    <p id="modalEnderecoComplemento">
+                    </p>
+
+
+                    <p id="modalEnderecoLocalidade">
+                    </p>
+
+
+                    <p>
+
+                        CEP:
+
+                        <span id="modalEnderecoCep">
+                            -
+                        </span>
+
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- PAGAMENTO -->
+
+            <section class="order-detail-section">
+
+                <h3>
+
+                    <i class="bi bi-credit-card"></i>
+
+                    Pagamento
+
+                </h3>
+
+
+                <div class="order-detail-grid">
+
+
+                    <div>
+
+                        <span>
+                            Status do pagamento
+                        </span>
+
+                        <strong id="modalStatusPagamento">
+                            -
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Forma de pagamento
+                        </span>
+
+                        <strong id="modalFormaPagamento">
+                            -
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- RESUMO FINANCEIRO -->
+
+            <section class="order-detail-section">
+
+                <h3>
+
+                    <i class="bi bi-receipt"></i>
+
+                    Resumo da compra
+
+                </h3>
+
+
+                <div class="order-summary">
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong id="modalSubtotal">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row discount">
+
+                        <span>
+                            Desconto promocional
+                        </span>
+
+                        <strong id="modalDescontoPromocional">
+                            - R$ 0,00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Frete
+                        </span>
+
+                        <strong id="modalFrete">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong id="modalTotal">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- CUPOM PROMOCIONAL -->
+
+            <section id="secaoCupomPromocional"
+                     class="order-detail-section"
+                     hidden>
+
+                <h3>
+
+                    <i class="bi bi-ticket-perforated"></i>
+
+                    Cupom promocional
+
+                </h3>
+
+
+                <p>
+
+                    Código utilizado:
+
+                    <strong id="modalCupomPromocional">
+                        -
+                    </strong>
+
+                </p>
+
+            </section>
+
+        </div>
+
+
+        <!-- =================================================
+             RODAPÉ DO POP-UP
+             ================================================= -->
+
+        <div class="modal-footer">
+
+
+            <button type="button"
+                    class="button button-ghost"
+                    onclick="fecharDetalhesPedido()">
+
+                Fechar
+
+            </button>
+
+
+            <!-- Botão de devolução (habilitado) - preenchido pelo JS -->
+            <a id="modalBotaoDevolucao"
+               class="button button-primary"
+               href="#"
+               hidden>
+
+                <i class="bi bi-arrow-counterclockwise"></i>
+
+                Solicitar devolução
+
+            </a>
+
+
+            <!-- Botão de devolução (desabilitado) - mostrado pelo JS -->
+            <button id="modalBotaoDevolucaoIndisponivel"
+                    type="button"
+                    class="button button-primary"
+                    disabled
+                    hidden>
+
+                <i class="bi bi-arrow-counterclockwise"></i>
+
+                Solicitar devolução
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script>
+
+    /* =========================================================
+       ELEMENTOS DO MODAL
+       ========================================================= */
+
+    const modalDetalhesPedido =
+        document.getElementById(
+            'modalDetalhesPedido'
+        );
+
+
+    const modalPedidoCarregando =
+        document.getElementById(
+            'modalPedidoCarregando'
+        );
+
+
+    const modalPedidoErro =
+        document.getElementById(
+            'modalPedidoErro'
+        );
+
+
+    const modalPedidoConteudo =
+        document.getElementById(
+            'modalPedidoConteudo'
+        );
+
+
+    /* =========================================================
+       ABRIR DETALHES
+       ========================================================= */
+
+    async function abrirDetalhesPedido(botao) {
+
+        const pedidoId =
+            botao.dataset.pedidoId;
+
+
+        if (!pedidoId) {
+
+            return;
+        }
+
+
+        prepararModal();
+
+
+        modalDetalhesPedido.hidden =
+            false;
+
+
+        modalDetalhesPedido.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+
+
+        document.body.style.overflow =
+            'hidden';
+
+
+        try {
+
+            const resposta =
+                await fetch(
+                    `/api/pedidos/${pedidoId}/detalhes`,
+                    {
+                        method: 'GET',
+
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+
+
+            let dados;
+
+
+            try {
+
+                dados =
+                    await resposta.json();
+
+            } catch (erroJson) {
+
+                throw new Error(
+                    'O servidor retornou uma resposta inválida.'
+                );
+            }
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    dados.erro ||
+                    'Não foi possível carregar os detalhes do pedido.'
+                );
+            }
+
+
+            preencherDetalhesPedido(
+                dados
+            );
+
+
+            modalPedidoCarregando.hidden =
+                true;
+
+
+            modalPedidoConteudo.hidden =
+                false;
+
+
+        } catch (erro) {
+
+            modalPedidoCarregando.hidden =
+                true;
+
+
+            modalPedidoErro.hidden =
+                false;
+
+
+            document.getElementById(
+                'modalPedidoErroMensagem'
+            ).textContent =
+                erro.message ||
+                'Não foi possível carregar os detalhes do pedido.';
+        }
+    }
+
+
+    /* =========================================================
+       PREPARAR MODAL
+       ========================================================= */
+
+    function prepararModal() {
+
+        modalPedidoCarregando.hidden =
+            false;
+
+
+        modalPedidoErro.hidden =
+            true;
+
+
+        modalPedidoConteudo.hidden =
+            true;
+
+
+        document.getElementById(
+            'modalItensPedido'
+        ).innerHTML =
+            '';
+
+
+        document.getElementById(
+            'secaoCupomPromocional'
+        ).hidden =
+            true;
+
+
+        document.getElementById(
+            'modalBotaoDevolucao'
+        ).hidden =
+            true;
+
+
+        document.getElementById(
+            'modalBotaoDevolucaoIndisponivel'
+        ).hidden =
+            true;
+    }
+
+
+    /* =========================================================
+       PREENCHER DETALHES
+       ========================================================= */
+
+    function preencherDetalhesPedido(dados) {
+
+        definirTexto(
+            'modalPedidoId',
+            dados.pedidoId
+        );
+
+
+        definirTexto(
+            'modalStatus',
+            formatarStatus(
+                dados.status
+            )
+        );
+
+
+        definirTexto(
+            'modalDataCriacao',
+            formatarDataHora(
+                dados.dataCriacao
+            )
+        );
+
+
+        definirTexto(
+            'modalQuantidadeItens',
+            dados.quantidadeItens
+        );
+
+
+        /* =====================================================
+           ENDEREÇO
+           ===================================================== */
+
+        const tipoLogradouro =
+            formatarEnum(
+                dados.tipoLogradouro
+            );
+
+
+        let enderecoPrincipal =
+            '';
+
+
+        if (tipoLogradouro) {
+
+            enderecoPrincipal +=
+                tipoLogradouro + ' ';
+        }
+
+
+        if (dados.logradouro) {
+
+            enderecoPrincipal +=
+                dados.logradouro;
+        }
+
+
+        if (dados.numero) {
+
+            enderecoPrincipal +=
+                ', ' + dados.numero;
+        }
+
+
+        definirTexto(
+            'modalEnderecoPrincipal',
+            enderecoPrincipal || '-'
+        );
+
+
+        definirTexto(
+            'modalEnderecoComplemento',
+            dados.complemento || ''
+        );
+
+
+        let localidade =
+            '';
+
+
+        if (dados.bairro) {
+
+            localidade +=
+                dados.bairro;
+        }
+
+
+        if (dados.cidade) {
+
+            if (localidade) {
+
+                localidade +=
+                    ' · ';
+            }
+
+
+            localidade +=
+                dados.cidade;
+        }
+
+
+        if (dados.uf) {
+
+            if (localidade) {
+
+                localidade +=
+                    ' - ';
+            }
+
+
+            localidade +=
+                dados.uf;
+        }
+
+
+        definirTexto(
+            'modalEnderecoLocalidade',
+            localidade || '-'
+        );
+
+
+        definirTexto(
+            'modalEnderecoCep',
+            dados.cep || '-'
+        );
+
+
+        /* =====================================================
+           PAGAMENTO
+           ===================================================== */
+
+        definirTexto(
+            'modalStatusPagamento',
+            formatarStatus(
+                dados.statusPagamento
+            )
+        );
+
+
+        definirTexto(
+            'modalFormaPagamento',
+            formatarEnum(
+                dados.formaPagamento
+            )
+        );
+
+
+        /* =====================================================
+           VALORES
+           ===================================================== */
+
+        definirTexto(
+            'modalSubtotal',
+            formatarMoeda(
+                dados.subtotal
+            )
+        );
+
+
+        definirTexto(
+            'modalDescontoPromocional',
+            '- ' + formatarMoeda(
+                dados.descontoPromocional
+            )
+        );
+
+
+        definirTexto(
+            'modalFrete',
+            formatarMoeda(
+                dados.valorFrete
+            )
+        );
+
+
+        definirTexto(
+            'modalTotal',
+            formatarMoeda(
+                dados.valorTotal
+            )
+        );
+
+
+        /* =====================================================
+           CUPOM
+           ===================================================== */
+
+        const secaoCupom =
+            document.getElementById(
+                'secaoCupomPromocional'
+            );
+
+
+        if (dados.codigoCupomPromocional) {
+
+            secaoCupom.hidden =
+                false;
+
+
+            definirTexto(
+                'modalCupomPromocional',
+                dados.codigoCupomPromocional
+            );
+
+        } else {
+
+            secaoCupom.hidden =
+                true;
+        }
+
+
+        /* =====================================================
+           PRODUTOS
+           ===================================================== */
+
+        preencherItens(
+            dados.itens
+        );
+
+
+        /* =====================================================
+           BOTÃO DE DEVOLUÇÃO
+           ===================================================== */
+
+        const botaoDevolucao =
+            document.getElementById(
+                'modalBotaoDevolucao'
+            );
+
+
+        const botaoDevolucaoIndisponivel =
+            document.getElementById(
+                'modalBotaoDevolucaoIndisponivel'
+            );
+
+
+        if (dados.status === 'ENTREGUE') {
+
+            botaoDevolucao.href =
+                `/devolucoes/solicitar/${dados.pedidoId}`;
+
+
+            botaoDevolucao.hidden =
+                false;
+
+
+            botaoDevolucaoIndisponivel.hidden =
+                true;
+
+        } else {
+
+            botaoDevolucao.hidden =
+                true;
+
+
+            botaoDevolucaoIndisponivel.hidden =
+                false;
+
+
+            botaoDevolucaoIndisponivel.title =
+                `Disponível apenas para pedidos entregues. Status atual: ${formatarStatus(dados.status)}.`;
+        }
+    }
+
+
+    /* =========================================================
+       PRODUTOS DO PEDIDO
+       ========================================================= */
+
+    function preencherItens(itens) {
+
+        const container =
+            document.getElementById(
+                'modalItensPedido'
+            );
+
+
+        container.innerHTML =
+            '';
+
+
+        if (!Array.isArray(itens)
+            || itens.length === 0) {
+
+            const mensagem =
+                document.createElement(
+                    'p'
+                );
+
+
+            mensagem.textContent =
+                'Nenhum item encontrado neste pedido.';
+
+
+            container.appendChild(
+                mensagem
+            );
+
+
+            return;
+        }
+
+
+        itens.forEach(
+            item => {
+
+                const linha =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                linha.className =
+                    'order-detail-item';
+
+
+                /* =============================================
+                   CAPA
+                   ============================================= */
+
+                const capa =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                capa.className =
+                    'mini-cover';
+
+
+                if (item.urlCapa) {
+
+                    const imagem =
+                        document.createElement(
+                            'img'
+                        );
+
+
+                    imagem.src =
+                        item.urlCapa;
+
+
+                    imagem.alt =
+                        item.titulo || 'Livro';
+
+
+                    capa.appendChild(
+                        imagem
+                    );
+
+
+                } else {
+
+                    const placeholder =
+                        document.createElement(
+                            'div'
+                        );
+
+
+                    placeholder.className =
+                        'mini-cover-placeholder';
+
+
+                    const marca =
+                        document.createElement(
+                            'span'
+                        );
+
+
+                    marca.className =
+                        'mini-cover-brand';
+
+
+                    marca.textContent =
+                        'BookNexus';
+
+
+                    const tituloCapa =
+                        document.createElement(
+                            'strong'
+                        );
+
+
+                    tituloCapa.className =
+                        'mini-cover-title';
+
+
+                    tituloCapa.textContent =
+                        item.titulo || 'Livro';
+
+
+                    const icone =
+                        document.createElement(
+                            'i'
+                        );
+
+
+                    icone.className =
+                        'bi bi-book-half';
+
+
+                    placeholder.appendChild(
+                        marca
+                    );
+
+
+                    placeholder.appendChild(
+                        tituloCapa
+                    );
+
+
+                    placeholder.appendChild(
+                        icone
+                    );
+
+
+                    capa.appendChild(
+                        placeholder
+                    );
+                }
+
+
+                /* =============================================
+                   INFORMAÇÕES
+                   ============================================= */
+
+                const informacoes =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                const titulo =
+                    document.createElement(
+                        'strong'
+                    );
+
+
+                titulo.textContent =
+                    item.titulo || 'Livro';
+
+
+                const detalhes =
+                    document.createElement(
+                        'p'
+                    );
+
+
+                let textoDetalhes =
+                    'Quantidade: '
+                    + (item.quantidade || 0);
+
+
+                if (item.autor) {
+
+                    textoDetalhes +=
+                        ' · '
+                        + item.autor;
+                }
+
+
+                detalhes.textContent =
+                    textoDetalhes;
+
+
+                const preco =
+                    document.createElement(
+                        'p'
+                    );
+
+
+                preco.textContent =
+                    formatarMoeda(
+                        item.precoUnitario
+                    )
+                    + ' cada';
+
+
+                informacoes.appendChild(
+                    titulo
+                );
+
+
+                informacoes.appendChild(
+                    detalhes
+                );
+
+
+                informacoes.appendChild(
+                    preco
+                );
+
+
+                /* =============================================
+                   TOTAL DO ITEM
+                   ============================================= */
+
+                const total =
+                    document.createElement(
+                        'strong'
+                    );
+
+
+                total.textContent =
+                    formatarMoeda(
+                        item.precoTotal
+                    );
+
+
+                linha.appendChild(
+                    capa
+                );
+
+
+                linha.appendChild(
+                    informacoes
+                );
+
+
+                linha.appendChild(
+                    total
+                );
+
+
+                container.appendChild(
+                    linha
+                );
+            }
+        );
+    }
+
+
+    /* =========================================================
+       FECHAR MODAL
+       ========================================================= */
+
+    function fecharDetalhesPedido() {
+
+        modalDetalhesPedido.hidden =
+            true;
+
+
+        modalDetalhesPedido.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+
+        document.body.style.overflow =
+            '';
+    }
+
+
+    /* =========================================================
+       FECHAR AO CLICAR FORA
+       ========================================================= */
+
+    modalDetalhesPedido.addEventListener(
+        'click',
+        function (evento) {
+
+            if (evento.target ===
+                modalDetalhesPedido) {
+
+                fecharDetalhesPedido();
+            }
+        }
+    );
+
+
+    /* =========================================================
+       FECHAR COM ESC
+       ========================================================= */
+
+    document.addEventListener(
+        'keydown',
+        function (evento) {
+
+            if (
+                evento.key === 'Escape'
+                &&
+                !modalDetalhesPedido.hidden
+            ) {
+
+                fecharDetalhesPedido();
+            }
+        }
+    );
+
+
+    /* =========================================================
+       FILTROS
+       ========================================================= */
+
+    const botoesFiltro =
+        document.querySelectorAll(
+            '.order-tabs [data-filtro]'
+        );
+
+
+    const cardsPedido =
+        document.querySelectorAll(
+            '.order-card[data-status]'
+        );
+
+
+    /**
+     * Define se um status é considerado finalizado.
+     *
+     * Inclui TROCA_RECUSADA como final, pois nada mais
+     * acontece depois que o admin recusa a troca.
+     */
+    function statusFinalizado(status) {
+
+        return status === 'ENTREGUE'
+            || status === 'CANCELADO'
+            || status === 'TROCA_RECUSADA';
+    }
+
+
+    botoesFiltro.forEach(
+        botao => {
+
+            botao.addEventListener(
+                'click',
+                function () {
+
+                    botoesFiltro.forEach(
+                        item => {
+
+                            item.classList.remove(
+                                'active'
+                            );
+                        }
+                    );
+
+
+                    botao.classList.add(
+                        'active'
+                    );
+
+
+                    aplicarFiltro(
+                        botao.dataset.filtro
+                    );
+                }
+            );
+        }
+    );
+
+
+    function aplicarFiltro(filtro) {
+
+        let quantidadeVisivel =
+            0;
+
+
+        cardsPedido.forEach(
+            card => {
+
+                const status =
+                    card.dataset.status;
+
+
+                let mostrar =
+                    false;
+
+
+                if (filtro === 'TODOS') {
+
+                    mostrar =
+                        true;
+
+
+                } else if (
+                    filtro === 'EM_PROCESSAMENTO'
+                ) {
+
+                    mostrar =
+                        !statusFinalizado(status);
+
+
+                } else if (
+                    filtro === 'FINALIZADOS'
+                ) {
+
+                    mostrar =
+                        statusFinalizado(status);
+                }
+
+
+                card.hidden =
+                    !mostrar;
+
+
+                if (mostrar) {
+
+                    quantidadeVisivel++;
+                }
+            }
+        );
+
+
+        document.getElementById(
+            'semResultadoFiltro'
+        ).hidden =
+            quantidadeVisivel !== 0;
+    }
+
+
+    /* =========================================================
+       CONTADORES
+       ========================================================= */
+
+    function atualizarContadores() {
+
+        let emAndamento =
+            0;
+
+
+        let finalizados =
+            0;
+
+
+        cardsPedido.forEach(
+            card => {
+
+                const status =
+                    card.dataset.status;
+
+
+                if (statusFinalizado(status)) {
+
+                    finalizados++;
+
+                } else {
+
+                    emAndamento++;
+                }
+            }
+        );
+
+
+        definirTexto(
+            'quantidadeEmAndamento',
+            emAndamento
+        );
+
+
+        definirTexto(
+            'quantidadeFinalizados',
+            finalizados
+        );
+    }
+
+
+    /* =========================================================
+       FORMATAÇÕES
+       ========================================================= */
+
+    function formatarMoeda(valor) {
+
+        const numero =
+            Number(valor || 0);
+
+
+        return numero.toLocaleString(
+            'pt-BR',
+            {
+                style: 'currency',
+                currency: 'BRL'
+            }
+        );
+    }
+
+
+    function formatarDataHora(valor) {
+
+        if (!valor) {
+
+            return '-';
+        }
+
+
+        const data =
+            new Date(valor);
+
+
+        if (
+            Number.isNaN(
+                data.getTime()
+            )
+        ) {
+
+            return valor;
+        }
+
+
+        return data.toLocaleString(
+            'pt-BR',
+            {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }
+        );
+    }
+
+
+    function formatarEnum(valor) {
+
+        if (!valor) {
+
+            return '-';
+        }
+
+
+        return String(valor)
+            .replaceAll('_', ' ')
+            .toLowerCase()
+            .replace(
+                /\b\w/g,
+                letra =>
+                    letra.toUpperCase()
+            );
+    }
+
+
+    function formatarStatus(status) {
+
+        if (!status) {
+
+            return '-';
+        }
+
+
+        const descricoes = {
+
+            EM_PROCESSAMENTO:
+                'Em processamento',
+
+            APROVADO:
+                'Aprovado',
+
+            EM_TRANSPORTE:
+                'Em transporte',
+
+            ENTREGUE:
+                'Entregue',
+
+            EM_TROCA:
+                'Em troca',
+
+            TROCA_AUTORIZADA:
+                'Troca autorizada',
+
+            TROCA_RECUSADA:
+                'Troca recusada',
+
+            CANCELADO:
+                'Cancelado'
+
+        };
+
+
+        return descricoes[status]
+            ||
+            formatarEnum(
+                status
+            );
+    }
+
+
+    function definirTexto(
+        id,
+        valor
+    ) {
+
+        const elemento =
+            document.getElementById(
+                id
+            );
+
+
+        if (!elemento) {
+
+            return;
+        }
+
+
+        if (
+            valor === null
+            ||
+            valor === undefined
+            ||
+            valor === ''
+        ) {
+
+            elemento.textContent =
+                '-';
+
+
+            return;
+        }
+
+
+        elemento.textContent =
+            valor;
+    }
+
+
+    /* =========================================================
+       INICIALIZAÇÃO
+       ========================================================= */
+
+    atualizarContadores();
+
+</script>
+</body>
+</html>

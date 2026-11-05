@@ -1,0 +1,451 @@
+<html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | BookNexus</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/prototype.css}">
+
+    <style>
+        .cliente-filter-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .cliente-filter-type {
+            min-width: 170px;
+        }
+
+        .cliente-filter-type select,
+        .cliente-filter-control select {
+            width: 100%;
+            min-height: 44px;
+            padding: 0 38px 0 14px;
+            border: 1px solid #d8dee8;
+            border-radius: 10px;
+            background: #ffffff;
+            color: #334155;
+            font: inherit;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cliente-filter-type select:focus,
+        .cliente-filter-control select:focus {
+            border-color: #2f6f57;
+            box-shadow: 0 0 0 3px rgba(47, 111, 87, 0.10);
+        }
+
+        .cliente-filter-control {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .cliente-filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cliente-filter-hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 760px) {
+            .cliente-filter-toolbar,
+            .cliente-filter-actions {
+                width: 100%;
+            }
+            .cliente-filter-type,
+            .cliente-filter-control {
+                width: 100%;
+                min-width: 100%;
+            }
+            .cliente-filter-actions .button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="admin-layout">
+    <aside th:replace="~{admin/fragments/sidebar :: sidebar('clientes')}"></aside>
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <div>
+                <p class="eyebrow">
+                    <i class="bi bi-people-fill"></i>
+                    Gestão de clientes
+                </p>
+                <h1>Lista de clientes</h1>
+                <p>Consulte e organize os clientes cadastrados na BookNexus.</p>
+            </div>
+            <a class="button button-primary" th:href="@{/admin/clientes/novo}">
+                <i class="bi bi-person-plus-fill"></i>
+                Novo cliente
+            </a>
+        </header>
+
+        <section class="admin-kpi-grid" aria-label="Indicadores de clientes">
+            <article class="admin-kpi">
+                <i class="bi bi-people-fill green"></i>
+                <div>
+                    <span>Total de clientes</span>
+                    <strong th:text="${totalClientes}">0</strong>
+                </div>
+            </article>
+
+            <article class="admin-kpi">
+                <i class="bi bi-person-check-fill blue"></i>
+                <div>
+                    <span>Clientes ativos</span>
+                    <strong th:text="${totalAtivos}">0</strong>
+                </div>
+            </article>
+
+            <article class="admin-kpi">
+                <i class="bi bi-person-dash-fill red"></i>
+                <div>
+                    <span>Clientes inativos</span>
+                    <strong th:text="${totalInativos}">0</strong>
+                </div>
+            </article>
+        </section>
+
+
+        <section class="panel admin-table-panel">
+            <form
+                    class="table-toolbar cliente-filter-toolbar"
+                    method="get"
+                    th:action="@{/admin/clientes}"
+                    id="form-filtro-clientes">
+
+                <label class="cliente-filter-type">
+                    <select name="tipoBusca" id="tipoBusca">
+                        <option value="" th:selected="${tipoBusca == null or tipoBusca == ''}">
+                            Filtrar por...
+                        </option>
+                        <option value="id" th:selected="${tipoBusca == 'id'}">
+                            ID
+                        </option>
+                        <option value="nome" th:selected="${tipoBusca == 'nome'}">
+                            Nome
+                        </option>
+                        <option value="cpf" th:selected="${tipoBusca == 'cpf'}">
+                            CPF
+                        </option>
+                        <option value="email" th:selected="${tipoBusca == 'email'}">
+                            E-mail
+                        </option>
+                        <option value="genero" th:selected="${tipoBusca == 'genero'}">
+                            Gênero
+                        </option>
+                        <option value="status" th:selected="${tipoBusca == 'status'}">
+                            Status
+                        </option>
+                    </select>
+                </label>
+
+                <label class="admin-search cliente-filter-control" id="filtro-texto-container">
+                    <i class="bi bi-search"></i>
+                    <input
+                            type="search"
+                            name="valorBusca"
+                            id="valorBusca"
+                            th:value="${valorBusca}"
+                            placeholder="Selecione um filtro">
+
+                </label>
+
+                <label class="cliente-filter-control cliente-filter-hidden" id="filtro-genero-container">
+                    <select name="genero" id="genero" disabled>
+                        <option value="">
+                            Selecione o gênero
+                        </option>
+                        <option
+                                th:each="generoOpcao : ${generos}"
+                                th:value="${generoOpcao}"
+                                th:text="${generoOpcao.descricao}"
+                                th:selected="${filtroGenero == generoOpcao}">
+                        </option>
+                    </select>
+                </label>
+
+                <label class="cliente-filter-control cliente-filter-hidden" id="filtro-status-container">
+                    <select name="inativado" id="inativado" disabled>
+                        <option value="">
+                            Selecione o status
+                        </option>
+                        <option value="false" th:selected="${filtroInativado != null and !filtroInativado}">
+                            Ativo
+                        </option>
+                        <option value="true" th:selected="${filtroInativado != null and filtroInativado}">
+                            Inativo
+                        </option>
+                    </select>
+                </label>
+
+                <div class="cliente-filter-actions">
+                    <button type="submit" class="button button-primary">
+                        <i class="bi bi-search"></i>
+                        Buscar
+                    </button>
+                    <a class="button button-ghost" th:href="@{/admin/clientes}">
+                        <i class="bi bi-x-lg"></i>
+                        Limpar
+                    </a>
+                </div>
+            </form>
+
+            <div class="table-scroll">
+                <table class="admin-table" id="tabela-clientes">
+                    <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>CPF</th>
+                        <th>Contato</th>
+                        <th>Gênero</th>
+                        <th>Status</th>
+                        <th aria-label="Ações"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="clientes-tbody">
+
+                    <tr th:if="${clientes == null or #lists.isEmpty(clientes)}" id="linha-sem-clientes">
+                        <td colspan="6">
+                            Nenhum cliente encontrado.
+                        </td>
+                    </tr>
+
+                    <tr th:each="cliente : ${clientes}" class="cliente-row" th:attr="data-id=${cliente.id}">
+                        <td>
+                            <div class="person-cell">
+                                <span
+                                        class="table-avatar"
+                                        th:text="${cliente.nome != null and !cliente.nome.isBlank()
+                                                ? #strings.substring(cliente.nome, 0, 1)
+                                                : '?'}">
+                                </span>
+                                <span>
+                                    <strong th:text="${cliente.nome}">Nome do cliente</strong>
+                                    <small th:text="'ID ' + ${cliente.id}">ID</small>
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="cpf-listagem" th:attr="data-cpf=${cliente.cpf}" th:text="${cliente.cpf}">
+                                00000000000
+                            </span>
+                        </td>
+
+                        <td>
+                            <strong th:text="${cliente.email}">cliente@email.com</strong>
+                            <small
+                                    th:if="${cliente.telefones != null and !cliente.telefones.isEmpty()}"
+                                    th:text="'('
+                                            + ${cliente.telefones[0].ddd}
+                                            + ') '
+                                            + ${cliente.telefones[0].numero}">
+                                (11) 99999-9999
+                            </small>
+                            <small th:if="${cliente.telefones == null or cliente.telefones.isEmpty()}">Sem telefone</small>
+                        </td>
+
+                        <td>
+                            <span th:if="${cliente.genero != null}" th:text="${cliente.genero.descricao}">
+                                —
+                            </span>
+                            <span th:if="${cliente.genero == null}">
+                                —
+                            </span>
+                        </td>
+
+                        <td>
+                            <span th:if="${!cliente.inativado}" class="admin-status active">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Ativo
+                            </span>
+                            <span th:if="${cliente.inativado}" class="admin-status inactive">
+                                <i class="bi bi-pause-circle-fill"></i>
+                                Inativo
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="row-actions">
+                                <a th:href="@{/admin/clientes/{id}(id=${cliente.id})}"
+                                   title="Ver detalhes"
+                                   aria-label="Ver detalhes do cliente">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{/admin/clientes/{id}/editar(id=${cliente.id})}"
+                                   title="Editar cliente"
+                                   aria-label="Editar cliente">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <footer class="table-footer">
+                <span th:text="'Exibindo '
+                                + ${clientes != null ? #lists.size(clientes) : 0}
+                                + ' de '
+                                + ${totalClientes}
+                                + ' clientes'">
+                    Exibindo 0 de 0 clientes
+                </span>
+                <div>
+                    <button type="button" disabled>
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <button class="current" type="button">
+                        1
+                    </button>
+                    <button type="button" disabled>
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </footer>
+        </section>
+    </main>
+</div>
+
+<script>
+    const tipoBusca = document.getElementById("tipoBusca");
+    const filtroTextoContainer = document.getElementById("filtro-texto-container");
+    const filtroGeneroContainer = document.getElementById("filtro-genero-container");
+    const filtroStatusContainer = document.getElementById("filtro-status-container");
+    const valorBusca = document.getElementById("valorBusca");
+    const genero = document.getElementById("genero");
+    const inativado = document.getElementById("inativado");
+
+    function configurarFiltro() {
+        const tipo = tipoBusca.value;
+
+        filtroTextoContainer.classList.add("cliente-filter-hidden");
+        filtroGeneroContainer.classList.add("cliente-filter-hidden");
+        filtroStatusContainer.classList.add("cliente-filter-hidden");
+
+        valorBusca.disabled = true;
+        genero.disabled = true;
+        inativado.disabled = true;
+
+        valorBusca.type = "search";
+        valorBusca.inputMode = "text";
+
+        if (tipo === "id") {
+            filtroTextoContainer.classList.remove("cliente-filter-hidden");
+            valorBusca.disabled = false;
+            valorBusca.placeholder = "Digite o ID do cliente";
+            valorBusca.inputMode = "numeric";
+            return;
+        }
+
+        if (tipo === "nome") {
+            filtroTextoContainer.classList.remove("cliente-filter-hidden");
+            valorBusca.disabled = false;
+            valorBusca.placeholder = "Digite o nome do cliente";
+            valorBusca.inputMode = "text";
+            return;
+        }
+
+        if (tipo === "cpf") {
+            filtroTextoContainer.classList.remove("cliente-filter-hidden");
+            valorBusca.disabled = false;
+            valorBusca.placeholder = "Digite o CPF";
+            valorBusca.inputMode = "numeric";
+            return;
+        }
+
+        if (tipo === "email") {
+            filtroTextoContainer.classList.remove("cliente-filter-hidden");
+            valorBusca.disabled = false;
+            valorBusca.placeholder = "Digite o e-mail";
+            valorBusca.inputMode = "email";
+            return;
+        }
+
+        if (tipo === "genero") {
+            filtroGeneroContainer.classList.remove("cliente-filter-hidden");
+            genero.disabled = false;
+            return;
+        }
+
+        if (tipo === "status") {
+            filtroStatusContainer.classList.remove("cliente-filter-hidden");
+            inativado.disabled = false;
+            return;
+        }
+
+        filtroTextoContainer.classList.remove("cliente-filter-hidden");
+        valorBusca.placeholder = "Selecione um filtro";
+    }
+
+    tipoBusca.addEventListener("change", function () {
+            valorBusca.value = "";
+            genero.value = "";
+            inativado.value = "";
+            configurarFiltro();
+        }
+    );
+
+    valorBusca.addEventListener("input", function () {
+            const tipo = tipoBusca.value;
+            if (tipo === "id") {
+                valorBusca.value = valorBusca.value.replace(/\D/g, "");
+                return;
+            }
+
+            if (tipo === "cpf") {
+                let cpf = valorBusca.value.replace(/\D/g, "").slice(0, 11);
+                cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
+                cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
+                cpf = cpf.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                valorBusca.value = cpf;
+            }
+        }
+    );
+
+    function formatarCpfTabela() {
+        document.querySelectorAll(".cpf-listagem").forEach(elemento => {
+                let cpf = (elemento.dataset.cpf || "").replace(/\D/g, "");
+                if (cpf.length !== 11) {
+                    return;
+                }
+
+                cpf = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                elemento.textContent = cpf;
+        });
+    }
+
+    function ordenarClientesPorIdCrescente() {
+        const tbody = document.getElementById("clientes-tbody");
+        const linhas = Array.from(tbody.querySelectorAll(".cliente-row"));
+
+        linhas.sort((linhaA, linhaB) => {
+                const idA = Number(linhaA.dataset.id);
+                const idB = Number(linhaB.dataset.id);
+                return idA - idB;
+            });
+        linhas.forEach(linha => {
+                tbody.appendChild(linha);
+            });
+    }
+
+    configurarFiltro();
+    formatarCpfTabela();
+    ordenarClientesPorIdCrescente();
+
+</script>
+</body>
+</html>

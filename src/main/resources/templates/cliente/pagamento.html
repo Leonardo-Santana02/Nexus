@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Pagamento | BookNexus</title>
+
+    <link rel="preconnect"
+          href="https://cdn.jsdelivr.net">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet"
+          th:href="@{/css/prototype.css}"
+          href="/css/prototype.css">
+</head>
+
+<body>
+
+<!-- =========================================================
+     CABEÇALHO
+     ========================================================= -->
+
+<header class="shop-header compact-header">
+
+    <div class="shop-header-main">
+
+        <a class="brand"
+           th:href="@{/home}"
+           href="/home">
+
+            <span class="brand-mark">
+                <i class="bi bi-book-half"></i>
+            </span>
+
+            <span>BookNexus</span>
+
+        </a>
+
+
+        <nav class="header-links"
+             aria-label="Ações da conta">
+
+            <a th:href="@{/home}"
+               href="/home">
+
+                <i class="bi bi-house-door"></i>
+
+                <span>Loja</span>
+
+            </a>
+
+
+            <a th:href="@{/pedidos}"
+               href="/pedidos">
+
+                <i class="bi bi-person-circle"></i>
+
+                <span>Minha conta</span>
+
+            </a>
+
+
+            <!-- =================================================
+                 CARRINHO COM CLIENTE
+                 ================================================= -->
+
+            <a class="cart-link"
+               th:if="${cliente != null}"
+               th:href="@{/carrinho(clienteId=${cliente.id})}"
+               href="/carrinho">
+
+                <i class="bi bi-bag-heart-fill"></i>
+
+                <span>Carrinho</span>
+
+
+                <b class="cart-count"
+                   th:if="${carrinho != null}"
+                   th:text="${carrinho.quantidadeItens}">
+                    0
+                </b>
+
+
+                <b class="cart-count"
+                   th:unless="${carrinho != null}">
+                    0
+                </b>
+
+            </a>
+
+
+            <!-- =================================================
+                 CARRINHO SEM CLIENTE
+                 ================================================= -->
+
+            <a class="cart-link"
+               th:unless="${cliente != null}"
+               th:href="@{/carrinho}"
+               href="/carrinho">
+
+                <i class="bi bi-bag-heart-fill"></i>
+
+                <span>Carrinho</span>
+
+                <b class="cart-count">
+                    0
+                </b>
+
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     CONTEÚDO PRINCIPAL
+     ========================================================= -->
+
+<main class="subpage">
+
+    <div class="page-shell">
+
+
+        <!-- =====================================================
+             BREADCRUMB
+             ===================================================== -->
+
+        <nav class="breadcrumb"
+             aria-label="Caminho de navegação">
+
+            <a th:href="@{/home}"
+               href="/home">
+
+                Início
+
+            </a>
+
+
+            <i class="bi bi-chevron-right"></i>
+
+
+            <a th:if="${cliente != null}"
+               th:href="@{/carrinho(clienteId=${cliente.id})}"
+               href="/carrinho">
+
+                Carrinho
+
+            </a>
+
+
+            <a th:unless="${cliente != null}"
+               th:href="@{/carrinho}"
+               href="/carrinho">
+
+                Carrinho
+
+            </a>
+
+
+            <i class="bi bi-chevron-right"></i>
+
+
+            <span>
+                Pagamento
+            </span>
+
+        </nav>
+
+
+        <!-- =====================================================
+             TÍTULO
+             ===================================================== -->
+
+        <div class="page-heading">
+
+            <div>
+
+                <p class="eyebrow">
+
+                    <i class="bi bi-credit-card-2-front-fill"></i>
+
+                    Finalização
+
+                </p>
+
+
+                <h1>
+                    Pagamento
+                </h1>
+
+
+                <p>
+                    Escolha um ou mais cartões de crédito para
+                    concluir o pagamento do valor definido no carrinho.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             ETAPAS
+             ===================================================== -->
+
+        <ol class="checkout-steps"
+            aria-label="Etapas da compra">
+
+            <li class="done">
+
+                <span>
+                    <i class="bi bi-check-lg"></i>
+                </span>
+
+                <b>
+                    Carrinho
+                </b>
+
+            </li>
+
+
+            <li class="active">
+
+                <span>
+                    2
+                </span>
+
+                <b>
+                    Pagamento
+                </b>
+
+            </li>
+
+
+            <li>
+
+                <span>
+                    3
+                </span>
+
+                <b>
+                    Pedido confirmado
+                </b>
+
+            </li>
+
+        </ol>
+
+
+        <!-- =====================================================
+             MENSAGENS
+             ===================================================== -->
+
+        <div th:if="${erro != null}"
+             class="alert alert-danger"
+             role="alert">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+
+            <span th:text="${erro}">
+                Não foi possível concluir a operação.
+            </span>
+
+        </div>
+
+
+        <div th:if="${sucesso != null}"
+             class="alert alert-success"
+             role="alert">
+
+            <i class="bi bi-check-circle-fill"></i>
+
+
+            <span th:text="${sucesso}">
+                Operação realizada com sucesso.
+            </span>
+
+        </div>
+
+
+        <!-- =====================================================
+             CHECKOUT
+             ===================================================== -->
+
+        <div class="checkout-layout payment-layout">
+
+
+            <!-- =================================================
+                 CONTEÚDO
+                 ================================================= -->
+
+            <section class="checkout-content">
+
+
+                <!-- =============================================
+                     ENDEREÇO DE ENTREGA
+                     ============================================= -->
+
+                <article class="panel address-panel">
+
+                    <div class="panel-title">
+
+                        <div>
+
+                            <h2>
+                                Endereço de entrega
+                            </h2>
+
+
+                            <p>
+                                Este será o destino do seu pedido.
+                            </p>
+
+                        </div>
+
+
+                        <a class="plain-link"
+                           th:if="${cliente != null}"
+                           th:href="@{/carrinho(clienteId=${cliente.id})}">
+
+                            Alterar
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         ENDEREÇO SELECIONADO
+                         ========================================= -->
+
+                    <div class="address-preview no-border"
+                         th:if="${enderecoEntrega != null}">
+
+                        <i class="bi bi-geo-alt-fill"></i>
+
+
+                        <span>
+
+                            <strong th:if="${enderecoEntrega.apelido != null and !#strings.isEmpty(enderecoEntrega.apelido)}"
+                                    th:text="${enderecoEntrega.apelido}">
+
+                                Endereço
+
+                            </strong>
+
+
+                            <strong th:unless="${enderecoEntrega.apelido != null and !#strings.isEmpty(enderecoEntrega.apelido)}">
+
+                                Endereço de entrega
+
+                            </strong>
+
+                            <br>
+
+
+                            <span th:if="${enderecoEntrega.tipoLogradouro != null}"
+                                  th:text="${enderecoEntrega.tipoLogradouro.descricao}">
+
+                                Rua
+
+                            </span>
+
+
+                            <span th:text="${enderecoEntrega.logradouro}">
+                                Logradouro
+                            </span>,
+
+                            <span th:text="${enderecoEntrega.numero}">
+                                000
+                            </span>
+
+
+                            <span th:if="${enderecoEntrega.complemento != null and !#strings.isEmpty(enderecoEntrega.complemento)}">
+
+                                ·
+
+                                <span th:text="${enderecoEntrega.complemento}">
+                                    Complemento
+                                </span>
+
+                            </span>
+
+                            <br>
+
+
+                            <span th:text="${enderecoEntrega.bairro}">
+                                Bairro
+                            </span>
+
+                            ·
+
+                            <span th:text="${enderecoEntrega.cidade}">
+                                Cidade
+                            </span>,
+
+                            <span th:if="${enderecoEntrega.uf != null}"
+                                  th:text="${enderecoEntrega.uf.sigla}">
+
+                                UF
+
+                            </span>
+
+                            ·
+
+                            <span th:text="${enderecoEntrega.cep}">
+                                00000-000
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         NENHUM ENDEREÇO
+                         ========================================= -->
+
+                    <div class="address-preview no-border"
+                         th:unless="${enderecoEntrega != null}">
+
+                        <i class="bi bi-exclamation-circle"></i>
+
+
+                        <span>
+
+                            <strong>
+                                Nenhum endereço selecionado
+                            </strong>
+
+                            <br>
+
+                            Volte ao carrinho e selecione um endereço
+                            de entrega antes de concluir a compra.
+
+                        </span>
+
+                    </div>
+
+                </article>
+
+                <article class="panel payment-panel">
+
+                    <div class="panel-title">
+
+                        <div>
+
+                            <h2>
+                                Forma de pagamento
+                            </h2>
+
+
+                            <p>
+                                Utilize um ou mais cartões de crédito.
+                            </p>
+
+                        </div>
+
+
+                        <i class="bi bi-wallet2 panel-heading-icon"></i>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         CARTÃO DE CRÉDITO
+                         ========================================= -->
+
+                    <label class="payment-option selected">
+
+                        <input type="radio"
+                               name="formaPagamentoVisual"
+                               value="CARTAO_CREDITO"
+                               checked>
+
+
+                        <span class="payment-icon card">
+
+                            <i class="bi bi-credit-card-2-front-fill"></i>
+
+                        </span>
+
+
+                        <span>
+
+                            <strong>
+                                Cartão de crédito
+                            </strong>
+
+
+                            <small>
+                                Pagamento em até 2x sem juros
+                            </small>
+
+                        </span>
+
+
+                        <span class="radio-mark"></span>
+
+                    </label>
+
+
+                    <!-- =========================================
+                         CARTÕES SALVOS
+                         ========================================= -->
+
+                    <div th:if="${cartoes != null and !cartoes.isEmpty()}">
+
+                        <div class="saved-card"
+                             th:each="cartao : ${cartoes}">
+
+                            <span class="card-chip">
+
+                                <i class="bi bi-credit-card"></i>
+
+                            </span>
+
+
+                            <span>
+
+                                <strong>
+
+                                    <span th:if="${cartao.bandeira != null}"
+                                          th:text="${cartao.bandeira.descricao}">
+
+                                        Bandeira
+
+                                    </span>
+
+                                    final
+
+                                    <span class="card-final"
+                                          th:attr="data-numero=${cartao.numeroCartao}">
+
+                                        ****
+
+                                    </span>
+
+                                </strong>
+
+
+                                <small th:text="${cartao.nomeImpresso}">
+                                    Nome impresso
+                                </small>
+
+                            </span>
+
+
+                            <label>
+
+                                <input type="checkbox"
+                                       class="cartao-checkbox"
+                                       th:value="${cartao.id}">
+
+                                Usar
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         NENHUM CARTÃO
+                         ========================================= -->
+
+                    <div th:unless="${cartoes != null and !cartoes.isEmpty()}">
+
+                        <p>
+                            Nenhum cartão de crédito está cadastrado.
+                        </p>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         DISTRIBUIÇÃO ENTRE CARTÕES
+                         ========================================= -->
+
+                    <div id="distribuicaoCartoes"
+                         th:if="${cartoes != null}">
+
+                        <div class="payment-card-value"
+                             th:each="cartao : ${cartoes}">
+
+                            <div th:attr="data-cartao-config=${cartao.id}"
+                                 style="display: none;">
+
+                                <label th:for="'valor-cartao-' + ${cartao.id}">
+
+                                    Valor neste cartão
+
+                                </label>
+
+
+                                <input type="number"
+                                       min="0.01"
+                                       step="0.01"
+                                       class="valor-cartao"
+                                       th:id="'valor-cartao-' + ${cartao.id}"
+                                       th:attr="data-cartao-id=${cartao.id}"
+                                       placeholder="0,00">
+
+
+                                <label th:for="'parcelas-cartao-' + ${cartao.id}">
+
+                                    Parcelas
+
+                                </label>
+
+
+                                <select class="parcelas-cartao"
+                                        th:id="'parcelas-cartao-' + ${cartao.id}"
+                                        th:attr="data-cartao-id=${cartao.id}">
+
+                                    <option value="1">
+                                        1x
+                                    </option>
+
+                                    <option value="2">
+                                        2x sem juros
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </article>
+            </section>
+
+
+            <!-- =================================================
+                 RESUMO DO PEDIDO
+                 ================================================= -->
+
+            <aside class="order-summary-card">
+
+                <h2>
+                    Resumo do pedido
+                </h2>
+
+
+                <!-- =============================================
+                     PRODUTOS
+                     ============================================= -->
+
+                <div th:if="${carrinho != null and carrinho.itens != null}">
+
+                    <div class="summary-product"
+                         th:each="item : ${carrinho.itens}">
+
+                        <div class="summary-thumb cover-rain"></div>
+
+
+                        <span>
+
+                            <span th:text="${item.produto.titulo}">
+                                Livro
+                            </span>
+
+
+                            <small>
+
+                                <span th:text="${item.quantidade}">
+                                    1
+                                </span>
+
+
+                                <span th:if="${item.quantidade == 1}">
+                                    unidade
+                                </span>
+
+
+                                <span th:unless="${item.quantidade == 1}">
+                                    unidades
+                                </span>
+
+                            </small>
+
+                        </span>
+
+
+                        <strong>
+
+                            R$
+
+                            <span th:text="${#numbers.formatDecimal(
+                                    item.subtotal,
+                                    1,
+                                    'POINT',
+                                    2,
+                                    'COMMA'
+                            )}">
+                                0,00
+                            </span>
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="summary-divider"></div>
+
+
+                <!-- =============================================
+                     SUBTOTAL
+                     ============================================= -->
+
+                <div class="summary-row">
+
+                    <span>
+                        Subtotal
+                    </span>
+
+
+                    <strong>
+
+                        R$
+
+                        <span th:if="${carrinho != null}"
+                              th:text="${#numbers.formatDecimal(
+                                    carrinho.subtotal,
+                                    1,
+                                    'POINT',
+                                    2,
+                                    'COMMA'
+                              )}">
+
+                            0,00
+
+                        </span>
+
+
+                        <span th:unless="${carrinho != null}">
+                            0,00
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <!-- =============================================
+                     DESCONTO APLICADO NO CARRINHO
+                     ============================================= -->
+
+                <div class="summary-row discount">
+
+                    <span>
+                        Desconto
+                    </span>
+
+
+                    <strong>
+
+                        - R$
+
+                        <span th:if="${descontoPromocional != null}"
+                              th:text="${#numbers.formatDecimal(
+                                    descontoPromocional,
+                                    1,
+                                    'POINT',
+                                    2,
+                                    'COMMA'
+                              )}">
+
+                            0,00
+
+                        </span>
+
+
+                        <span th:unless="${descontoPromocional != null}">
+                            0,00
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <!-- =============================================
+                     FRETE
+                     ============================================= -->
+
+                <div class="summary-row">
+
+                    <span>
+                        Frete
+                    </span>
+
+
+                    <strong>
+
+                        R$
+
+                        <span th:if="${valorFrete != null}"
+                              th:text="${#numbers.formatDecimal(
+                                    valorFrete,
+                                    1,
+                                    'POINT',
+                                    2,
+                                    'COMMA'
+                              )}">
+
+                            0,00
+
+                        </span>
+
+
+                        <span th:unless="${valorFrete != null}">
+                            0,00
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-divider"></div>
+
+
+                <!-- =============================================
+                     VALOR FINAL
+                     ============================================= -->
+
+                <div class="summary-row total">
+
+                    <span>
+                        Total a pagar
+                    </span>
+
+
+                    <strong>
+
+                        R$
+
+                        <span id="totalPedido"
+                              th:if="${valorTotal != null}"
+                              th:attr="data-valor=${valorTotal}"
+                              th:text="${#numbers.formatDecimal(
+                                    valorTotal,
+                                    1,
+                                    'POINT',
+                                    2,
+                                    'COMMA'
+                              )}">
+
+                            0,00
+
+                        </span>
+
+
+                        <span id="totalPedidoVazio"
+                              th:unless="${valorTotal != null}"
+                              data-valor="0">
+
+                            0,00
+
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <!-- =============================================
+                     DISTRIBUIÇÃO DOS CARTÕES
+                     ============================================= -->
+
+                <div class="summary-row">
+
+                    <span>
+                        Distribuído nos cartões
+                    </span>
+
+
+                    <strong>
+
+                        R$
+
+                        <span id="valorDistribuido">
+                            0,00
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>
+                        Restante
+                    </span>
+
+
+                    <strong>
+
+                        R$
+
+                        <span id="valorRestante">
+                            0,00
+                        </span>
+
+                    </strong>
+
+                </div>
+
+
+                <small class="summary-note">
+
+                    O valor da compra foi definido na etapa do carrinho.
+                    Nesta página são informados apenas os cartões utilizados
+                    para realizar o pagamento.
+
+                </small>
+
+
+                <!-- =============================================
+                     FORMULÁRIO DE FINALIZAÇÃO
+                     ============================================= -->
+
+                <form id="formConfirmarPagamento"
+                      th:action="@{/pagamento/finalizar}"
+                      action="/pagamento/finalizar"
+                      method="post">
+
+
+                    <input type="hidden"
+                           name="clienteId"
+                           id="clienteId"
+                           th:if="${cliente != null}"
+                           th:value="${cliente.id}">
+
+
+                    <input type="hidden"
+                           name="enderecoEntregaId"
+                           id="enderecoEntregaId"
+                           th:if="${enderecoEntrega != null}"
+                           th:value="${enderecoEntrega.id}">
+
+
+                    <!--
+                        Os campos referentes aos cartões são gerados
+                        pelo JavaScript imediatamente antes do POST.
+
+                        Não existe envio de cupom nesta página.
+                    -->
+
+                    <div id="camposCartoes"></div>
+
+
+                    <button class="button button-primary summary-action"
+                            id="btnConfirmarPagamento"
+                            type="submit">
+
+                        Confirmar pagamento
+
+                        <i class="bi bi-lock-fill"></i>
+
+                    </button>
+
+                </form>
+
+
+                <!-- =============================================
+                     VOLTAR AO CARRINHO
+                     ============================================= -->
+
+                <a class="summary-return"
+                   th:if="${cliente != null}"
+                   th:href="@{/carrinho(clienteId=${cliente.id})}"
+                   href="/carrinho">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Voltar ao carrinho
+
+                </a>
+
+
+                <a class="summary-return"
+                   th:unless="${cliente != null}"
+                   th:href="@{/carrinho}"
+                   href="/carrinho">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Voltar ao carrinho
+
+                </a>
+
+            </aside>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+     ========================================================= -->
+
+<script>
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+
+            /*
+             * =====================================================
+             * ELEMENTOS
+             * =====================================================
+             */
+
+            const checkboxCartoes =
+                document.querySelectorAll(
+                    '.cartao-checkbox'
+                );
+
+
+            const totalPedidoElemento =
+                document.getElementById(
+                    'totalPedido'
+                );
+
+
+            const totalPedidoVazio =
+                document.getElementById(
+                    'totalPedidoVazio'
+                );
+
+
+            const valorDistribuidoElemento =
+                document.getElementById(
+                    'valorDistribuido'
+                );
+
+
+            const valorRestanteElemento =
+                document.getElementById(
+                    'valorRestante'
+                );
+
+
+            const formPagamento =
+                document.getElementById(
+                    'formConfirmarPagamento'
+                );
+
+
+            const camposCartoes =
+                document.getElementById(
+                    'camposCartoes'
+                );
+
+
+            const botaoConfirmar =
+                document.getElementById(
+                    'btnConfirmarPagamento'
+                );
+
+
+            /*
+             * =====================================================
+             * FORMATAÇÃO
+             * =====================================================
+             */
+
+            function formatarMoeda(valor) {
+
+                if (!Number.isFinite(valor)) {
+
+                    return '0,00';
+                }
+
+
+                return valor.toLocaleString(
+                    'pt-BR',
+                    {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }
+                );
+            }
+
+
+            function obterNumeroData(elemento) {
+
+                if (!elemento) {
+
+                    return 0;
+                }
+
+
+                const valor =
+                    parseFloat(
+                        elemento.dataset.valor
+                        ||
+                        '0'
+                    );
+
+
+                if (Number.isNaN(valor)) {
+
+                    return 0;
+                }
+
+
+                return valor;
+            }
+
+
+            /*
+             * =====================================================
+             * TOTAL DO PEDIDO
+             * =====================================================
+             *
+             * Esse valor já deve chegar pronto do backend.
+             *
+             * O pagamento não aplica cupom e não recalcula
+             * desconto.
+             * =====================================================
+             */
+
+            function obterTotalPedido() {
+
+                if (totalPedidoElemento) {
+
+                    return obterNumeroData(
+                        totalPedidoElemento
+                    );
+                }
+
+
+                return obterNumeroData(
+                    totalPedidoVazio
+                );
+            }
+
+
+            /*
+             * =====================================================
+             * CARTÕES SELECIONADOS
+             * =====================================================
+             */
+
+            function obterCartoesSelecionados() {
+
+                return Array
+                    .from(
+                        checkboxCartoes
+                    )
+                    .filter(
+                        function (checkbox) {
+
+                            return checkbox.checked;
+                        }
+                    );
+            }
+
+
+            /*
+             * =====================================================
+             * EXIBIR / OCULTAR CONFIGURAÇÃO DOS CARTÕES
+             * =====================================================
+             */
+
+            function atualizarConfiguracaoCartoes() {
+
+                checkboxCartoes.forEach(
+                    function (checkbox) {
+
+                        const cartaoId =
+                            checkbox.value;
+
+
+                        const configuracao =
+                            document.querySelector(
+                                '[data-cartao-config="'
+                                + cartaoId
+                                + '"]'
+                            );
+
+
+                        if (!configuracao) {
+
+                            return;
+                        }
+
+
+                        if (checkbox.checked) {
+
+                            configuracao.style.display =
+                                'block';
+
+                        } else {
+
+                            configuracao.style.display =
+                                'none';
+
+
+                            const campoValor =
+                                configuracao.querySelector(
+                                    '.valor-cartao'
+                                );
+
+
+                            if (campoValor) {
+
+                                campoValor.value =
+                                    '';
+                            }
+                        }
+                    }
+                );
+            }
+
+
+            /*
+             * =====================================================
+             * SOMA DOS CARTÕES
+             * =====================================================
+             */
+
+            function calcularValorDistribuido() {
+
+                const cartoes =
+                    obterCartoesSelecionados();
+
+
+                let total =
+                    0;
+
+
+                cartoes.forEach(
+                    function (checkbox) {
+
+                        const campoValor =
+                            document.querySelector(
+                                '.valor-cartao[data-cartao-id="'
+                                + checkbox.value
+                                + '"]'
+                            );
+
+
+                        if (!campoValor) {
+
+                            return;
+                        }
+
+
+                        const valor =
+                            parseFloat(
+                                campoValor.value
+                            );
+
+
+                        if (!Number.isNaN(valor)) {
+
+                            total += valor;
+                        }
+                    }
+                );
+
+
+                return total;
+            }
+
+
+            /*
+             * =====================================================
+             * VALOR RESTANTE
+             * =====================================================
+             */
+
+            function calcularValorRestante() {
+
+                const totalPedido =
+                    obterTotalPedido();
+
+
+                const valorDistribuido =
+                    calcularValorDistribuido();
+
+
+                const restante =
+                    totalPedido
+                    -
+                    valorDistribuido;
+
+
+                if (restante < 0) {
+
+                    return 0;
+                }
+
+
+                return restante;
+            }
+
+
+            /*
+             * =====================================================
+             * DISTRIBUIÇÃO AUTOMÁTICA
+             * =====================================================
+             *
+             * Com apenas um cartão selecionado, todo o valor
+             * final é atribuído automaticamente a ele.
+             *
+             * Com múltiplos cartões, o usuário escolhe quanto
+             * será pago em cada cartão.
+             * =====================================================
+             */
+
+            function distribuirValorEntreCartoes() {
+
+                const cartoes =
+                    obterCartoesSelecionados();
+
+
+                const totalPedido =
+                    obterTotalPedido();
+
+
+                if (cartoes.length === 0) {
+
+                    return;
+                }
+
+
+                /*
+                 * Um cartão:
+                 *
+                 * recebe automaticamente todo o valor final.
+                 */
+                if (cartoes.length === 1) {
+
+                    const cartaoId =
+                        cartoes[0].value;
+
+
+                    const campo =
+                        document.querySelector(
+                            '.valor-cartao[data-cartao-id="'
+                            + cartaoId
+                            + '"]'
+                        );
+
+
+                    if (campo) {
+
+                        campo.value =
+                            totalPedido.toFixed(2);
+                    }
+
+
+                    return;
+                }
+
+
+                /*
+                 * Mais de um cartão:
+                 *
+                 * não fazemos divisão arbitrária.
+                 *
+                 * O usuário define os valores.
+                 */
+                cartoes.forEach(
+                    function (checkbox) {
+
+                        const campo =
+                            document.querySelector(
+                                '.valor-cartao[data-cartao-id="'
+                                + checkbox.value
+                                + '"]'
+                            );
+
+
+                        if (
+                            campo
+                            &&
+                            campo.value === ''
+                        ) {
+
+                            campo.value =
+                                '10.00';
+                        }
+                    }
+                );
+            }
+
+
+            /*
+             * =====================================================
+             * RESUMO
+             * =====================================================
+             */
+
+            function atualizarResumo() {
+
+                const distribuido =
+                    calcularValorDistribuido();
+
+
+                const restante =
+                    calcularValorRestante();
+
+
+                if (valorDistribuidoElemento) {
+
+                    valorDistribuidoElemento.textContent =
+                        formatarMoeda(
+                            distribuido
+                        );
+                }
+
+
+                if (valorRestanteElemento) {
+
+                    valorRestanteElemento.textContent =
+                        formatarMoeda(
+                            restante
+                        );
+                }
+
+
+                atualizarEstadoBotao();
+            }
+
+
+            /*
+             * =====================================================
+             * VALIDAÇÃO DOS CARTÕES
+             * =====================================================
+             */
+
+            function validarCartoes() {
+
+                const totalPedido =
+                    obterTotalPedido();
+
+
+                if (totalPedido <= 0) {
+
+                    alert(
+                        'O valor da compra é inválido.'
+                    );
+
+                    return false;
+                }
+
+
+                const cartoes =
+                    obterCartoesSelecionados();
+
+
+                if (cartoes.length === 0) {
+
+                    alert(
+                        'Selecione pelo menos um cartão para realizar o pagamento.'
+                    );
+
+                    return false;
+                }
+
+
+                let soma =
+                    0;
+
+
+                for (const checkbox of cartoes) {
+
+                    const cartaoId =
+                        checkbox.value;
+
+
+                    const campoValor =
+                        document.querySelector(
+                            '.valor-cartao[data-cartao-id="'
+                            + cartaoId
+                            + '"]'
+                        );
+
+
+                    if (!campoValor) {
+
+                        alert(
+                            'Não foi possível identificar o valor de um dos cartões.'
+                        );
+
+                        return false;
+                    }
+
+
+                    const valor =
+                        parseFloat(
+                            campoValor.value
+                        );
+
+
+                    if (
+                        Number.isNaN(valor)
+                        ||
+                        valor <= 0
+                    ) {
+
+                        alert(
+                            'Informe um valor válido para cada cartão selecionado.'
+                        );
+
+
+                        campoValor.focus();
+
+
+                        return false;
+                    }
+
+
+                    /*
+                     * RN0034
+                     *
+                     * Quando houver mais de um cartão,
+                     * cada cartão deve receber pelo menos
+                     * R$ 10,00.
+                     */
+                    if (
+                        cartoes.length > 1
+                        &&
+                        valor < 10
+                    ) {
+
+                        alert(
+                            'Ao utilizar mais de um cartão, '
+                            + 'cada cartão deve receber pelo menos R$ 10,00.'
+                        );
+
+
+                        campoValor.focus();
+
+
+                        return false;
+                    }
+
+
+                    soma += valor;
+                }
+
+
+                /*
+                 * Trabalhamos com centavos para evitar
+                 * diferenças de ponto flutuante.
+                 */
+                const somaCentavos =
+                    Math.round(
+                        soma * 100
+                    );
+
+
+                const totalCentavos =
+                    Math.round(
+                        totalPedido * 100
+                    );
+
+
+                if (
+                    somaCentavos
+                    !==
+                    totalCentavos
+                ) {
+
+                    alert(
+                        'A soma dos valores dos cartões deve ser igual a R$ '
+                        + formatarMoeda(
+                            totalPedido
+                        )
+                        + '.'
+                    );
+
+
+                    return false;
+                }
+
+
+                return true;
+            }
+
+
+            /*
+             * =====================================================
+             * ESTADO DO BOTÃO
+             * =====================================================
+             */
+
+            function atualizarEstadoBotao() {
+
+                if (!botaoConfirmar) {
+
+                    return;
+                }
+
+
+                const cliente =
+                    document.getElementById(
+                        'clienteId'
+                    );
+
+
+                const endereco =
+                    document.getElementById(
+                        'enderecoEntregaId'
+                    );
+
+
+                if (
+                    !cliente
+                    ||
+                    !cliente.value
+                    ||
+                    !endereco
+                    ||
+                    !endereco.value
+                    ||
+                    obterTotalPedido() <= 0
+                ) {
+
+                    botaoConfirmar.disabled =
+                        true;
+
+
+                    return;
+                }
+
+
+                botaoConfirmar.disabled =
+                    false;
+            }
+
+
+            /*
+             * =====================================================
+             * CAMPOS DOS CARTÕES
+             * =====================================================
+             *
+             * Mantemos três listas paralelas:
+             *
+             * cartoesIds
+             * cartoesValores
+             * cartoesParcelas
+             *
+             * A posição em cada lista representa o mesmo cartão.
+             * =====================================================
+             */
+
+            function gerarCamposCartoes() {
+
+                if (!camposCartoes) {
+
+                    return;
+                }
+
+
+                camposCartoes.innerHTML =
+                    '';
+
+
+                obterCartoesSelecionados()
+                    .forEach(
+                        function (checkbox) {
+
+                            const cartaoId =
+                                checkbox.value;
+
+
+                            const campoValor =
+                                document.querySelector(
+                                    '.valor-cartao[data-cartao-id="'
+                                    + cartaoId
+                                    + '"]'
+                                );
+
+
+                            const campoParcelas =
+                                document.querySelector(
+                                    '.parcelas-cartao[data-cartao-id="'
+                                    + cartaoId
+                                    + '"]'
+                                );
+
+
+                            /*
+                             * ID DO CARTÃO
+                             */
+                            const inputId =
+                                document.createElement(
+                                    'input'
+                                );
+
+
+                            inputId.type =
+                                'hidden';
+
+
+                            inputId.name =
+                                'cartoesIds';
+
+
+                            inputId.value =
+                                cartaoId;
+
+
+                            /*
+                             * VALOR
+                             */
+                            const inputValor =
+                                document.createElement(
+                                    'input'
+                                );
+
+
+                            inputValor.type =
+                                'hidden';
+
+
+                            inputValor.name =
+                                'cartoesValores';
+
+
+                            inputValor.value =
+                                campoValor
+                                    ? campoValor.value
+                                    : '0';
+
+
+                            /*
+                             * PARCELAS
+                             */
+                            const inputParcelas =
+                                document.createElement(
+                                    'input'
+                                );
+
+
+                            inputParcelas.type =
+                                'hidden';
+
+
+                            inputParcelas.name =
+                                'cartoesParcelas';
+
+
+                            inputParcelas.value =
+                                campoParcelas
+                                    ? campoParcelas.value
+                                    : '1';
+
+
+                            camposCartoes.appendChild(
+                                inputId
+                            );
+
+
+                            camposCartoes.appendChild(
+                                inputValor
+                            );
+
+
+                            camposCartoes.appendChild(
+                                inputParcelas
+                            );
+                        }
+                    );
+            }
+
+
+            /*
+             * =====================================================
+             * EVENTOS DOS CARTÕES
+             * =====================================================
+             */
+
+            checkboxCartoes.forEach(
+                function (checkbox) {
+
+                    checkbox.addEventListener(
+                        'change',
+                        function () {
+
+                            atualizarConfiguracaoCartoes();
+
+
+                            distribuirValorEntreCartoes();
+
+
+                            atualizarResumo();
+                        }
+                    );
+                }
+            );
+
+
+            /*
+             * =====================================================
+             * ALTERAÇÃO MANUAL DO VALOR
+             * =====================================================
+             */
+
+            document
+                .querySelectorAll(
+                    '.valor-cartao'
+                )
+                .forEach(
+                    function (campo) {
+
+                        campo.addEventListener(
+                            'input',
+                            function () {
+
+                                atualizarResumo();
+                            }
+                        );
+                    }
+                );
+
+
+            /*
+             * =====================================================
+             * FINALIZAÇÃO
+             * =====================================================
+             */
+
+            if (formPagamento) {
+
+                formPagamento.addEventListener(
+                    'submit',
+                    function (event) {
+
+                        const cliente =
+                            document.getElementById(
+                                'clienteId'
+                            );
+
+
+                        const endereco =
+                            document.getElementById(
+                                'enderecoEntregaId'
+                            );
+
+
+                        /*
+                         * Cliente obrigatório.
+                         */
+                        if (
+                            !cliente
+                            ||
+                            !cliente.value
+                        ) {
+
+                            event.preventDefault();
+
+
+                            alert(
+                                'Cliente não identificado.'
+                            );
+
+
+                            return;
+                        }
+
+
+                        /*
+                         * Endereço obrigatório.
+                         */
+                        if (
+                            !endereco
+                            ||
+                            !endereco.value
+                        ) {
+
+                            event.preventDefault();
+
+
+                            alert(
+                                'Selecione um endereço de entrega antes de concluir a compra.'
+                            );
+
+
+                            return;
+                        }
+
+
+                        /*
+                         * Validação da distribuição financeira.
+                         */
+                        if (!validarCartoes()) {
+
+                            event.preventDefault();
+
+
+                            return;
+                        }
+
+
+                        /*
+                         * Gera somente os campos dos cartões.
+                         *
+                         * Não existe geração de campos de cupom.
+                         */
+                        gerarCamposCartoes();
+
+
+                        /*
+                         * Impede envio duplicado.
+                         */
+                        if (botaoConfirmar) {
+
+                            botaoConfirmar.disabled =
+                                true;
+
+
+                            botaoConfirmar.innerHTML =
+                                'Processando... '
+                                +
+                                '<i class="bi bi-hourglass-split"></i>';
+                        }
+                    }
+                );
+            }
+
+
+            /*
+             * =====================================================
+             * ÚLTIMOS QUATRO DÍGITOS DO CARTÃO
+             * =====================================================
+             */
+
+            document
+                .querySelectorAll(
+                    '.card-final'
+                )
+                .forEach(
+                    function (elemento) {
+
+                        const numero =
+                            (
+                                elemento.dataset.numero
+                                ||
+                                ''
+                            )
+                                .replace(
+                                    /\D/g,
+                                    ''
+                                );
+
+
+                        if (numero.length >= 4) {
+
+                            elemento.textContent =
+                                numero.slice(-4);
+
+                        } else {
+
+                            elemento.textContent =
+                                '****';
+                        }
+                    }
+                );
+
+
+            /*
+             * =====================================================
+             * ESTADO INICIAL
+             * =====================================================
+             */
+
+            atualizarConfiguracaoCartoes();
+
+
+            atualizarResumo();
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

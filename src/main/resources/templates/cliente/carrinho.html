@@ -1,0 +1,3848 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+    <title>
+        BookNexus | Carrinho
+    </title>
+
+    <link
+            rel="preconnect"
+            href="https://cdn.jsdelivr.net">
+
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/prototype.css}"
+            href="/css/prototype.css">
+
+
+    <style>
+
+        /* =========================================================
+           PÁGINA
+           ========================================================= */
+
+        .cart-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .cart-page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .cart-page-header h1 {
+            margin: 0.35rem 0;
+        }
+
+        .cart-page-header p {
+            margin: 0;
+            color: #66756d;
+        }
+
+
+        /* =========================================================
+           MENSAGENS
+           ========================================================= */
+
+        .cart-message {
+            padding: 0.9rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .cart-message.success {
+            background: #e5f3ea;
+            color: #24543a;
+            border: 1px solid #b9d9c4;
+        }
+
+        .cart-message.error {
+            background: #f9e5e5;
+            color: #7a2d2d;
+            border: 1px solid #e8bcbc;
+        }
+
+
+        /* =========================================================
+           CLIENTE
+           ========================================================= */
+
+        .customer-banner {
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.2rem;
+            background: #eef3ef;
+            border: 1px solid #d2ddd6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .customer-banner i {
+            font-size: 1.4rem;
+            color: #2d4a3e;
+        }
+
+        .customer-banner strong {
+            display: block;
+        }
+
+        .customer-banner span {
+            color: #68786f;
+            font-size: 0.85rem;
+        }
+
+
+        /* =========================================================
+           LAYOUT
+           ========================================================= */
+
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .checkout-main {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel {
+            background: #ffffff;
+            border: 1px solid #dbe3de;
+            border-radius: 14px;
+            padding: 1.25rem;
+        }
+
+        .panel-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .panel-title span {
+            color: #708077;
+            font-size: 0.85rem;
+        }
+
+
+        /* =========================================================
+           CARRINHO VAZIO
+           ========================================================= */
+
+        .empty-cart {
+            padding: 2.5rem 1rem;
+            text-align: center;
+            color: #68776f;
+        }
+
+        .empty-cart > i {
+            display: block;
+            margin-bottom: 0.8rem;
+            font-size: 2.7rem;
+            color: #8aa093;
+        }
+
+        .empty-cart h3 {
+            margin-bottom: 0.4rem;
+            color: #263b31;
+        }
+
+        .empty-cart p {
+            margin-bottom: 1.2rem;
+        }
+
+
+        /* =========================================================
+           ITENS
+           ========================================================= */
+
+        .cart-items {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 90px minmax(0, 1fr) auto;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e3e8e5;
+        }
+
+        .cart-item:last-child {
+            border-bottom: 0;
+        }
+
+        .cart-item-cover {
+            min-height: 120px;
+            padding: 0.7rem;
+            background: #2d4a3e;
+            color: #f5f0e9;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.72rem;
+        }
+
+        .cart-item-cover strong {
+            font-size: 0.82rem;
+        }
+
+        .cart-item-info h3 {
+            margin: 0 0 0.3rem;
+            font-size: 1rem;
+        }
+
+        .cart-item-author {
+            margin: 0 0 0.6rem;
+            color: #718078;
+            font-size: 0.85rem;
+        }
+
+        .cart-item-stock {
+            display: block;
+            margin-top: 0.45rem;
+            color: #708077;
+            font-size: 0.78rem;
+        }
+
+        .cart-item-price {
+            font-weight: 700;
+            color: #263c31;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            border: 1px solid #cdd8d2;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .quantity-control button {
+            width: 34px;
+            height: 34px;
+            border: 0;
+            background: #f1f5f2;
+            cursor: pointer;
+        }
+
+        .quantity-control button:hover {
+            background: #e4ebe7;
+        }
+
+        .quantity-control input {
+            width: 45px;
+            height: 34px;
+            border: 0;
+            border-left: 1px solid #cdd8d2;
+            border-right: 1px solid #cdd8d2;
+            text-align: center;
+            outline: none;
+        }
+
+        .remove-item {
+            border: 0;
+            background: transparent;
+            color: #9b3f3f;
+            cursor: pointer;
+            font-size: 0.82rem;
+        }
+
+
+        /* =========================================================
+           ENTREGA
+           ========================================================= */
+
+        .address-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+
+        .address-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            padding: 0.9rem;
+            border: 1px solid #d4ded8;
+            border-radius: 10px;
+            cursor: pointer;
+            transition:
+                    border-color 0.15s ease,
+                    background 0.15s ease;
+        }
+
+        .address-option:hover {
+            border-color: #9eafa5;
+            background: #f8faf9;
+        }
+
+        .address-option:has(input:checked) {
+            border-color: #49695a;
+            background: #f1f6f3;
+        }
+
+        .address-option input {
+            margin-top: 0.25rem;
+        }
+        .address-option strong {
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        .address-option span {
+            display: block;
+            color: #6d7c74;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+        .address-option > span {
+            flex: 1;
+        }
+        .no-address {
+            color: #75847c;
+            font-size: 0.9rem;
+        }
+        .no-address p {
+            margin: 0.35rem 0;
+        }
+
+        .freight-result {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.8rem 0;
+        }
+
+        .freight-result strong {
+            color: #294438;
+        }
+
+        .freight-help {
+            margin: 0.7rem 0 0;
+            color: #728078;
+            font-size: 0.8rem;
+        }
+
+
+        /* =========================================================
+           CUPONS
+           ========================================================= */
+
+        .coupon-panel-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .coupon-intro {
+            margin: 0;
+            color: #68786f;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .coupon-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .coupon-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+        }
+
+        .applied-coupons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .applied-coupons-title {
+            margin: 0;
+            color: #294438;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .applied-coupon {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+            padding: 0.75rem 0.85rem;
+            background: #f4f8f5;
+            border: 1px solid #d6e2da;
+            border-radius: 9px;
+        }
+
+        .applied-coupon-info {
+            min-width: 0;
+        }
+
+        .applied-coupon-info strong {
+            display: block;
+            color: #294438;
+            font-size: 0.88rem;
+            word-break: break-word;
+        }
+
+        .applied-coupon-info span {
+            display: block;
+            margin-top: 0.15rem;
+            color: #6d7c74;
+            font-size: 0.77rem;
+        }
+
+        .coupon-remove {
+            flex-shrink: 0;
+            border: 0;
+            background: transparent;
+            color: #9b3f3f;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .coupon-empty-selection {
+            margin: 0;
+            color: #75847c;
+            font-size: 0.82rem;
+        }
+
+
+        /* =========================================================
+           PRÓXIMA ETAPA
+           ========================================================= */
+
+        .payment-next-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 1rem;
+            background: #f5f8f6;
+            border: 1px solid #dbe3de;
+            border-radius: 10px;
+        }
+
+        .payment-next-step i {
+            margin-top: 0.1rem;
+            color: #456655;
+            font-size: 1.25rem;
+        }
+
+        .payment-next-step strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #294438;
+        }
+
+        .payment-next-step span {
+            color: #6d7c74;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+
+        /* =========================================================
+           RESUMO
+           ========================================================= */
+
+        .summary-panel {
+            position: sticky;
+            top: 1rem;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0.8rem 0;
+            color: #617068;
+        }
+
+        .summary-line strong {
+            color: #263c31;
+            text-align: right;
+        }
+
+        .summary-discount strong {
+            color: #3e7657;
+        }
+
+        .summary-total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dbe3de;
+            font-size: 1.1rem;
+        }
+
+        .summary-action {
+            width: 100%;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .summary-action:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .continue-shopping {
+            display: block;
+            margin-top: 0.8rem;
+            text-align: center;
+            color: #456655;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+
+        /* =========================================================
+           MODAL DE CUPONS
+           ========================================================= */
+
+        .coupon-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .coupon-modal.open {
+            display: flex;
+        }
+
+        .coupon-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(24, 35, 29, 0.55);
+        }
+
+        .coupon-modal-dialog {
+            position: relative;
+            z-index: 1;
+            width: min(680px, 100%);
+            max-height: calc(100vh - 2rem);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 18px 60px rgba(25, 40, 32, 0.25);
+        }
+
+        .coupon-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.2rem 1.25rem;
+            border-bottom: 1px solid #e1e7e3;
+        }
+
+        .coupon-modal-header h2 {
+            margin: 0;
+            color: #263b31;
+            font-size: 1.2rem;
+        }
+
+        .coupon-modal-header p {
+            margin: 0.3rem 0 0;
+            color: #708077;
+            font-size: 0.83rem;
+            line-height: 1.45;
+        }
+
+        .coupon-modal-close {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            border: 0;
+            border-radius: 8px;
+            background: #f0f4f1;
+            color: #40594d;
+            cursor: pointer;
+            font-size: 1.15rem;
+        }
+
+        .coupon-modal-body {
+            padding: 1.25rem;
+            overflow-y: auto;
+        }
+
+        .coupon-loading,
+        .coupon-list-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: #718078;
+        }
+
+        .coupon-loading i,
+        .coupon-list-empty i {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-size: 1.8rem;
+            color: #789084;
+        }
+
+        .coupon-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .coupon-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #d8e1dc;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .coupon-card.selected {
+            border-color: #5b7d6b;
+            background: #f2f7f4;
+        }
+
+        .coupon-card-code {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+        }
+
+        .coupon-card-code strong {
+            color: #263b31;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+
+        .coupon-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.22rem 0.48rem;
+            border-radius: 999px;
+            background: #e9f0ec;
+            color: #456655;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .coupon-card-description {
+            margin: 0.4rem 0 0;
+            color: #708077;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .coupon-card-value {
+            display: block;
+            margin-top: 0.45rem;
+            color: #315e46;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .coupon-card-action {
+            min-width: 105px;
+            justify-content: center;
+        }
+
+        .coupon-card-action.selected {
+            background: #eef3ef;
+            color: #385548;
+            border-color: #bdcec4;
+        }
+
+        .coupon-modal-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid #e1e7e3;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+
+        /* =========================================================
+           ERRO SEM CLIENTE
+           ========================================================= */
+
+        .no-customer {
+            padding: 3rem 1rem;
+            text-align: center;
+        }
+
+        .no-customer i {
+            display: block;
+            margin-bottom: 1rem;
+            font-size: 2.8rem;
+            color: #8b9d93;
+        }
+
+
+        /* =========================================================
+           RESPONSIVO
+           ========================================================= */
+
+        @media (max-width: 900px) {
+
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-panel {
+                position: static;
+            }
+        }
+
+
+        @media (max-width: 650px) {
+
+            .cart-page {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .cart-item {
+                grid-template-columns: 70px 1fr;
+            }
+
+            .cart-item-actions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .panel-title {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+
+            .coupon-card {
+                grid-template-columns: 1fr;
+            }
+
+            .coupon-card-action {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =============================================================
+     CABEÇALHO
+     ============================================================= -->
+
+<header class="shop-header">
+
+    <div class="shop-header-main">
+
+        <a
+                class="brand"
+                th:href="@{/home}"
+                href="/home">
+
+            <span class="brand-mark">
+                <i class="bi bi-book-half"></i>
+            </span>
+
+            <span>
+                BookNexus
+            </span>
+
+        </a>
+
+
+        <nav
+                class="header-links"
+                aria-label="Ações da conta">
+
+            <a th:href="@{/pedidos}"
+               href="/pedidos">
+
+                <i class="bi bi-person-circle"></i>
+
+                <span>
+                    Minha conta
+                </span>
+
+            </a>
+
+
+            <a
+                    class="cart-link"
+                    th:if="${cliente != null}"
+                    th:href="@{/carrinho(clienteId=${cliente.id})}"
+                    href="/carrinho">
+
+                <i class="bi bi-bag-heart-fill"></i>
+
+                <span>
+                    Carrinho
+                </span>
+
+                <b
+                        class="cart-count"
+                        th:if="${carrinho != null}"
+                        th:text="${carrinho.quantidadeItens}">
+                    0
+                </b>
+
+            </a>
+
+
+            <a
+                    class="cart-link"
+                    th:unless="${cliente != null}"
+                    th:href="@{/carrinho}"
+                    href="/carrinho">
+
+                <i class="bi bi-bag-heart-fill"></i>
+
+                <span>
+                    Carrinho
+                </span>
+
+                <b class="cart-count">
+                    0
+                </b>
+
+            </a>
+
+
+            <a th:href="@{/login}"
+               href="/login">
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>
+                    Sair
+                </span>
+
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <nav
+            class="shop-nav"
+            aria-label="Navegação da loja">
+
+        <a th:href="@{/home}"
+           href="/home">
+            Início
+        </a>
+
+        <a
+                class="active"
+                th:if="${cliente != null}"
+                th:href="@{/carrinho(clienteId=${cliente.id})}"
+                href="/carrinho">
+            Carrinho
+        </a>
+
+        <a
+                class="active"
+                th:unless="${cliente != null}"
+                th:href="@{/carrinho}"
+                href="/carrinho">
+            Carrinho
+        </a>
+
+        <a th:href="@{/pedidos}"
+           href="/pedidos">
+            Meus pedidos
+        </a>
+
+    </nav>
+
+</header>
+
+
+<!-- =============================================================
+     CONTEÚDO
+     ============================================================= -->
+
+<main class="cart-page">
+
+
+    <!-- =========================================================
+         CABEÇALHO DA PÁGINA
+         ========================================================= -->
+
+    <section class="cart-page-header">
+
+        <p class="eyebrow">
+
+            <i class="bi bi-bag-heart-fill"></i>
+
+            Sua seleção
+
+        </p>
+
+
+        <h1>
+            Carrinho de compras
+        </h1>
+
+
+        <p>
+            Revise os livros, escolha o endereço de entrega,
+            calcule o frete e aplique seus cupons.
+        </p>
+
+    </section>
+
+
+    <!-- =========================================================
+         MENSAGENS
+         ========================================================= -->
+
+    <div
+            class="cart-message success"
+            th:if="${sucesso}">
+
+        <i class="bi bi-check-circle-fill"></i>
+
+        <span th:text="${sucesso}">
+            Operação realizada.
+        </span>
+
+    </div>
+
+
+    <div
+            class="cart-message error"
+            th:if="${erro}">
+
+        <i class="bi bi-exclamation-circle-fill"></i>
+
+        <span th:text="${erro}">
+            Não foi possível realizar a operação.
+        </span>
+
+    </div>
+
+
+    <!-- =========================================================
+         CLIENTE NÃO IDENTIFICADO
+         ========================================================= -->
+
+    <section
+            class="panel no-customer"
+            th:if="${cliente == null}">
+
+        <i class="bi bi-person-exclamation"></i>
+
+
+        <h2>
+            Nenhum cliente selecionado
+        </h2>
+
+
+        <p>
+            Selecione o cliente na página inicial antes de acessar o carrinho.
+        </p>
+
+
+        <a
+                class="button button-primary"
+                th:href="@{/home}"
+                href="/home">
+
+            <i class="bi bi-arrow-left"></i>
+
+            Voltar para a loja
+
+        </a>
+
+    </section>
+
+
+    <!-- =========================================================
+         CONTEÚDO DO CARRINHO
+         ========================================================= -->
+
+    <th:block
+            th:if="${cliente != null and carrinho != null}">
+
+
+        <!-- =====================================================
+             CLIENTE
+             ===================================================== -->
+
+        <section class="customer-banner">
+
+            <i class="bi bi-person-check-fill"></i>
+
+            <div>
+
+                <strong
+                        th:text="${cliente.nome}">
+                    Cliente
+                </strong>
+
+                <span>
+                    Carrinho associado a este cliente
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             LAYOUT PRINCIPAL
+             ===================================================== -->
+
+        <div class="checkout-layout">
+
+
+            <!-- =================================================
+                 COLUNA PRINCIPAL
+                 ================================================= -->
+
+            <div class="checkout-main">
+
+
+                <!-- =================================================
+                     ITENS DO CARRINHO
+                     ================================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <h2>
+                            Itens do carrinho
+                        </h2>
+
+                        <span>
+
+                            <strong
+                                    id="quantidadeItensTexto"
+                                    th:text="${carrinho.quantidadeItens}">
+                                0
+                            </strong>
+
+                            item(ns)
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- CARRINHO VAZIO -->
+
+                    <div
+                            class="empty-cart"
+                            th:if="${carrinho.vazio}">
+
+                        <i class="bi bi-bag"></i>
+
+                        <h3>
+                            Seu carrinho está vazio
+                        </h3>
+
+                        <p>
+                            Você ainda não adicionou nenhum livro ao carrinho.
+                        </p>
+
+                        <a
+                                class="button button-primary"
+                                th:href="@{/home}"
+                                href="/home">
+
+                            <i class="bi bi-arrow-left"></i>
+
+                            Explorar catálogo
+
+                        </a>
+
+                    </div>
+
+
+                    <!-- ITENS -->
+
+                    <div
+                            class="cart-items"
+                            th:unless="${carrinho.vazio}">
+
+                        <article
+                                class="cart-item"
+                                th:each="item : ${carrinho.itens}"
+                                th:id="${'item-' + item.produto.id}">
+
+
+                            <div class="cart-item-cover">
+
+                                <span>
+                                    BookNexus
+                                </span>
+
+                                <strong
+                                        th:text="${item.produto.titulo}">
+                                    Livro
+                                </strong>
+
+                                <span
+                                        th:text="${item.produto.autor}">
+                                    Autor
+                                </span>
+
+                            </div>
+
+
+                            <div class="cart-item-info">
+
+                                <h3
+                                        th:text="${item.produto.titulo}">
+                                    Título
+                                </h3>
+
+                                <p
+                                        class="cart-item-author"
+                                        th:text="${item.produto.autor}">
+                                    Autor
+                                </p>
+
+                                <span
+                                        class="cart-item-price"
+                                        th:text="${'R$ ' + #numbers.formatDecimal(item.produto.preco, 1, 2, 'COMMA')}">
+                                    R$ 0,00
+                                </span>
+
+                                <span
+                                        class="cart-item-stock"
+                                        th:text="${'Estoque disponível: ' + item.produto.estoque}">
+                                    Estoque disponível
+                                </span>
+
+                            </div>
+
+
+                            <div class="cart-item-actions">
+
+                                <strong
+                                        th:text="${'R$ ' + #numbers.formatDecimal(item.subtotal, 1, 2, 'COMMA')}">
+                                    R$ 0,00
+                                </strong>
+
+
+                                <div
+                                        class="quantity-control"
+                                        th:data-produto-id="${item.produto.id}"
+                                        th:data-estoque="${item.produto.estoque}">
+
+                                    <button
+                                            type="button"
+                                            aria-label="Diminuir quantidade"
+                                            onclick="alterarQuantidade(this, -1)">
+
+                                        <i class="bi bi-dash"></i>
+
+                                    </button>
+
+
+                                    <input
+                                            type="number"
+                                            min="1"
+                                            th:max="${item.produto.estoque}"
+                                            th:value="${item.quantidade}"
+                                            readonly>
+
+
+                                    <button
+                                            type="button"
+                                            aria-label="Aumentar quantidade"
+                                            onclick="alterarQuantidade(this, 1)">
+
+                                        <i class="bi bi-plus"></i>
+
+                                    </button>
+
+                                </div>
+
+
+                                <button
+                                        type="button"
+                                        class="remove-item"
+                                        th:data-produto-id="${item.produto.id}"
+                                        onclick="removerItem(this)">
+
+                                    <i class="bi bi-trash3"></i>
+
+                                    Remover
+
+                                </button>
+
+                            </div>
+
+                        </article>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ENDEREÇO / ENTREGA
+                     ================================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <h2>
+                            Endereço de entrega
+                        </h2>
+
+                        <span>
+                            Escolha onde receber
+                        </span>
+
+                    </div>
+
+
+                    <div
+                            class="address-list"
+                            th:if="${enderecosEntrega != null and !#lists.isEmpty(enderecosEntrega)}">
+
+                        <label
+                                class="address-option"
+                                th:each="endereco : ${enderecosEntrega}">
+
+                            <input
+                                    type="radio"
+                                    name="enderecoEntrega"
+                                    th:value="${endereco.id}"
+                                    th:checked="${enderecoEntregaAtual != null and enderecoEntregaAtual == endereco.id}"
+                                    onchange="selecionarEndereco(this)">
+
+                            <span>
+
+                                <strong
+                                        th:if="${endereco.apelido != null and !endereco.apelido.isBlank()}"
+                                        th:text="${endereco.apelido}">
+                                    Casa
+                                </strong>
+
+                                <strong
+                                        th:unless="${endereco.apelido != null and !endereco.apelido.isBlank()}">
+                                    Endereço de entrega
+                                </strong>
+
+                                <span
+                                        th:text="${endereco.tipoLogradouro.descricao
+                                        + ' '
+                                        + endereco.logradouro
+                                        + ', '
+                                        + endereco.numero}">
+                                    Logradouro
+                                </span>
+
+                                <span
+                                        th:if="${endereco.complemento != null and !endereco.complemento.isBlank()}"
+                                        th:text="${endereco.complemento}">
+                                    Complemento
+                                </span>
+
+                                <span
+                                        th:text="${endereco.bairro
+                                        + ' - '
+                                        + endereco.cidade
+                                        + '/'
+                                        + endereco.uf.sigla}">
+                                    Cidade/UF
+                                </span>
+
+                                <span
+                                        th:text="${'CEP ' + endereco.cep}">
+                                    CEP
+                                </span>
+
+                                <span
+                                        th:text="${endereco.pais}">
+                                    Brasil
+                                </span>
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <div
+                            class="no-address"
+                            th:if="${enderecosEntrega == null or #lists.isEmpty(enderecosEntrega)}">
+
+                        <p>
+                            Nenhum endereço de entrega está disponível para este cliente.
+                        </p>
+
+                        <p>
+                            Cadastre um endereço de entrega antes de prosseguir.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     FRETE
+                     ================================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <h2>
+                            Frete
+                        </h2>
+
+                        <span>
+                            Calculado pelo endereço
+                        </span>
+
+                    </div>
+
+
+                    <div class="freight-result">
+
+                        <span>
+                            Entrega padrão
+                        </span>
+
+                        <strong
+                                id="freteTexto"
+                                th:if="${valorFrete != null and valorFrete > 0}"
+                                th:text="${'R$ ' + #numbers.formatDecimal(valorFrete, 1, 2, 'COMMA')}">
+                            R$ 0,00
+                        </strong>
+
+                        <strong
+                                id="freteTextoNaoCalculado"
+                                th:unless="${valorFrete != null and valorFrete > 0}">
+                            Selecione um endereço
+                        </strong>
+
+                    </div>
+
+
+                    <p
+                            class="freight-help"
+                            id="freteMensagem">
+
+                        O valor será calculado de acordo com o endereço
+                        selecionado e o peso dos produtos da compra.
+
+                    </p>
+
+                </section>
+
+
+                <!-- =================================================
+                     CUPONS
+                     ================================================= -->
+
+                <section class="panel">
+
+                    <div class="panel-title">
+
+                        <h2>
+                            Cupons
+                        </h2>
+
+                        <span>
+                            Aplicados no carrinho
+                        </span>
+
+                    </div>
+
+
+                    <div class="coupon-panel-content">
+
+                        <p class="coupon-intro">
+                            Consulte os cupons disponíveis para este cliente e
+                            selecione diretamente aqueles que deseja utilizar
+                            nesta compra.
+                        </p>
+
+
+                        <div class="coupon-actions">
+
+                            <button
+                                    type="button"
+                                    class="button button-secondary coupon-button"
+                                    id="verCuponsBtn"
+                                    onclick="abrirModalCupons()"
+                                    th:disabled="${carrinho.vazio}">
+
+                                <i class="bi bi-ticket-perforated"></i>
+
+                                Ver cupons
+
+                            </button>
+
+                        </div>
+
+
+                        <div
+                                class="applied-coupons"
+                                id="cuponsAplicadosContainer">
+
+                            <p
+                                    class="coupon-empty-selection"
+                                    id="nenhumCupomAplicado">
+
+                                Nenhum cupom aplicado ao carrinho.
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- =================================================
+                 RESUMO
+                 ================================================= -->
+
+            <aside class="panel summary-panel">
+
+                <div class="panel-title">
+
+                    <h2>
+                        Resumo do pedido
+                    </h2>
+
+                </div>
+
+
+                <!-- SUBTOTAL -->
+
+                <div class="summary-line">
+
+                    <span>
+
+                        Subtotal
+                        (
+                        <span
+                                id="summaryQuantidade"
+                                th:text="${carrinho.quantidadeItens}">
+                            0
+                        </span>
+                        itens
+                        )
+
+                    </span>
+
+                    <strong
+                            id="summarySubtotal"
+                            th:text="${'R$ ' + #numbers.formatDecimal(subtotal, 1, 2, 'COMMA')}">
+                        R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <!-- CUPOM PROMOCIONAL -->
+
+                <div
+                        class="summary-line summary-discount"
+                        id="linhaDescontoPromocional"
+                        th:if="${descontoPromocional != null and descontoPromocional > 0}">
+
+                    <span>
+                        Cupom promocional
+                    </span>
+
+                    <strong
+                            id="summaryDescontoPromocional"
+                            th:text="${'- R$ ' + #numbers.formatDecimal(descontoPromocional, 1, 2, 'COMMA')}">
+                        - R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <div
+                        class="summary-line summary-discount"
+                        id="linhaDescontoPromocionalOculta"
+                        th:unless="${descontoPromocional != null and descontoPromocional > 0}"
+                        style="display: none;">
+
+                    <span>
+                        Cupom promocional
+                    </span>
+
+                    <strong id="summaryDescontoPromocionalOculto">
+                        - R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <!-- FRETE -->
+
+                <div class="summary-line">
+
+                    <span>
+                        Frete
+                    </span>
+
+                    <strong
+                            id="summaryFrete"
+                            th:if="${valorFrete != null and valorFrete > 0}"
+                            th:text="${'R$ ' + #numbers.formatDecimal(valorFrete, 1, 2, 'COMMA')}">
+                        R$ 0,00
+                    </strong>
+
+                    <strong
+                            id="summaryFreteNaoCalculado"
+                            th:unless="${valorFrete != null and valorFrete > 0}">
+                        A calcular
+                    </strong>
+
+                </div>
+
+
+                <!-- CUPONS DE TROCA -->
+
+                <div
+                        class="summary-line summary-discount"
+                        id="linhaCuponsTroca"
+                        th:if="${valorCuponsTrocaAplicado != null and valorCuponsTrocaAplicado > 0}">
+
+                    <span>
+                        Cupons de troca
+                    </span>
+
+                    <strong
+                            id="summaryCuponsTroca"
+                            th:text="${'- R$ ' + #numbers.formatDecimal(valorCuponsTrocaAplicado, 1, 2, 'COMMA')}">
+                        - R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <div
+                        class="summary-line summary-discount"
+                        id="linhaCuponsTrocaOculta"
+                        th:unless="${valorCuponsTrocaAplicado != null and valorCuponsTrocaAplicado > 0}"
+                        style="display: none;">
+
+                    <span>
+                        Cupons de troca
+                    </span>
+
+                    <strong id="summaryCuponsTrocaOculto">
+                        - R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <!-- TOTAL -->
+
+                <div class="summary-line summary-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong
+                            id="summaryTotal"
+                            th:text="${'R$ ' + #numbers.formatDecimal(valorTotal, 1, 2, 'COMMA')}">
+                        R$ 0,00
+                    </strong>
+
+                </div>
+
+
+                <!-- FINALIZAÇÃO -->
+
+                <form
+                        th:action="@{/carrinho/finalizar}"
+                        action="/carrinho/finalizar"
+                        method="post"
+                        id="checkoutForm">
+
+
+                    <input
+                            type="hidden"
+                            id="clienteIdCheckout"
+                            name="clienteId"
+                            th:value="${cliente.id}">
+
+
+                    <input
+                            type="hidden"
+                            id="enderecoIdCheckout"
+                            name="enderecoId"
+                            value="">
+
+
+                    <button
+                            class="button button-primary summary-action"
+                            type="submit"
+                            id="paymentBtn"
+                            disabled>
+
+                        <i class="bi bi-credit-card"></i>
+
+                        Ir para pagamento
+
+                    </button>
+
+                </form>
+
+
+                <a
+                        class="continue-shopping"
+                        th:href="@{/home}"
+                        href="/home">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Continuar comprando
+
+                </a>
+
+            </aside>
+
+        </div>
+
+    </th:block>
+
+</main>
+
+
+<!-- =============================================================
+     MODAL DE CUPONS
+     ============================================================= -->
+
+<div
+        class="coupon-modal"
+        id="couponModal"
+        aria-hidden="true">
+
+    <div
+            class="coupon-modal-backdrop"
+            onclick="fecharModalCupons()">
+    </div>
+
+
+    <section
+            class="coupon-modal-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="couponModalTitle">
+
+        <header class="coupon-modal-header">
+
+            <div>
+
+                <h2 id="couponModalTitle">
+                    Cupons disponíveis
+                </h2>
+
+                <p>
+                    Selecione diretamente os cupons que deseja aplicar
+                    ao carrinho. Não é necessário informar nenhum código.
+                </p>
+
+            </div>
+
+
+            <button
+                    type="button"
+                    class="coupon-modal-close"
+                    aria-label="Fechar"
+                    onclick="fecharModalCupons()">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </header>
+
+
+        <div class="coupon-modal-body">
+
+            <div
+                    class="coupon-loading"
+                    id="couponLoading">
+
+                <i class="bi bi-hourglass-split"></i>
+
+                Carregando cupons...
+
+            </div>
+
+
+            <div
+                    class="coupon-list-empty"
+                    id="couponEmpty"
+                    style="display: none;">
+
+                <i class="bi bi-ticket-perforated"></i>
+
+                Nenhum cupom válido está disponível para este cliente.
+
+            </div>
+
+
+            <div
+                    class="coupon-list"
+                    id="couponList">
+            </div>
+
+        </div>
+
+
+        <footer class="coupon-modal-footer">
+
+            <button
+                    type="button"
+                    class="button button-secondary"
+                    onclick="fecharModalCupons()">
+
+                Fechar
+
+            </button>
+
+        </footer>
+
+    </section>
+
+</div>
+
+
+<!-- =============================================================
+     RODAPÉ
+     ============================================================= -->
+
+<footer class="shop-footer">
+
+    <strong>
+        BookNexus
+    </strong>
+
+    ·
+
+    <a th:href="@{/home}"
+       href="/home">
+        Voltar para a loja
+    </a>
+
+</footer>
+
+
+<!-- =============================================================
+     JAVASCRIPT
+     ============================================================= -->
+
+<script>
+
+    /*
+     * ==========================================================
+     * ESTADO
+     * ==========================================================
+     */
+
+    let enderecoEntregaId = null;
+    let valorFrete = 0;
+
+    let cupomPromocionalSelecionadoId = null;
+    let cuponsTrocaSelecionadosIds = [];
+
+    let cuponsCarregados = [];
+
+
+    /*
+     * ==========================================================
+     * CLIENTE
+     * ==========================================================
+     */
+
+    function obterClienteIdPagina() {
+
+        const input =
+            document.getElementById(
+                'clienteIdCheckout'
+            );
+
+        if (!input) {
+            return null;
+        }
+
+        if (!input.value) {
+            return null;
+        }
+
+        return input.value;
+    }
+
+
+    /*
+     * ==========================================================
+     * QUANTIDADE
+     * ==========================================================
+     */
+
+    function obterQuantidadeItens() {
+
+        const elemento =
+            document.getElementById(
+                'quantidadeItensTexto'
+            );
+
+        if (!elemento) {
+            return 0;
+        }
+
+        const valor =
+            Number(
+                elemento.textContent.trim()
+            );
+
+        if (Number.isNaN(valor)) {
+            return 0;
+        }
+
+        return valor;
+    }
+
+
+    /*
+     * ==========================================================
+     * MOEDA
+     * ==========================================================
+     */
+
+    function formatarMoeda(valor) {
+
+        const numero =
+            Number(
+                valor || 0
+            );
+
+        return numero.toLocaleString(
+            'pt-BR',
+            {
+                style: 'currency',
+                currency: 'BRL'
+            }
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * ERRO
+     * ==========================================================
+     */
+
+    function mostrarErro(mensagem) {
+
+        alert(
+            mensagem
+            ||
+            'Não foi possível concluir a operação.'
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * ALTERAR QUANTIDADE
+     * ==========================================================
+     */
+
+    async function alterarQuantidade(
+        botao,
+        diferenca
+    ) {
+
+        const controle =
+            botao.closest(
+                '.quantity-control'
+            );
+
+        if (!controle) {
+            return;
+        }
+
+
+        const produtoId =
+            controle.dataset.produtoId;
+
+
+        const estoque =
+            Number(
+                controle.dataset.estoque
+                ||
+                0
+            );
+
+
+        const input =
+            controle.querySelector(
+                'input'
+            );
+
+        if (!input) {
+            return;
+        }
+
+
+        const quantidadeAtual =
+            Number(
+                input.value
+                ||
+                1
+            );
+
+
+        const novaQuantidade =
+            quantidadeAtual
+            +
+            diferenca;
+
+
+        if (novaQuantidade < 1) {
+            return;
+        }
+
+
+        if (novaQuantidade > estoque) {
+
+            mostrarErro(
+                'A quantidade solicitada é maior que o estoque disponível.'
+            );
+
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        body.append(
+            'produtoId',
+            produtoId
+        );
+
+
+        body.append(
+            'quantidade',
+            novaQuantidade
+        );
+
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (clienteId) {
+
+            body.append(
+                'clienteId',
+                clienteId
+            );
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/alterar-quantidade',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível alterar a quantidade.'
+                );
+            }
+
+
+            /*
+             * O backend invalida o frete porque o peso mudou.
+             *
+             * Recarregamos para refletir:
+             *
+             * - quantidade;
+             * - subtotal;
+             * - cupons;
+             * - frete invalidado;
+             * - total.
+             */
+            window.location.reload();
+
+
+        } catch (erro) {
+
+            mostrarErro(
+                erro.message
+            );
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * REMOVER ITEM
+     * ==========================================================
+     */
+
+    async function removerItem(botao) {
+
+        const produtoId =
+            botao.dataset.produtoId;
+
+
+        if (!produtoId) {
+            return;
+        }
+
+
+        const confirmou =
+            confirm(
+                'Deseja remover este livro do carrinho?'
+            );
+
+
+        if (!confirmou) {
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        body.append(
+            'produtoId',
+            produtoId
+        );
+
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (clienteId) {
+
+            body.append(
+                'clienteId',
+                clienteId
+            );
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/remover',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível remover o produto.'
+                );
+            }
+
+
+            window.location.reload();
+
+
+        } catch (erro) {
+
+            mostrarErro(
+                erro.message
+            );
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * ENDEREÇO
+     * ==========================================================
+     */
+
+    async function selecionarEndereco(input) {
+
+        if (!input) {
+            return;
+        }
+
+
+        enderecoEntregaId =
+            input.value;
+
+
+        valorFrete = 0;
+
+
+        const enderecoCheckout =
+            document.getElementById(
+                'enderecoIdCheckout'
+            );
+
+
+        if (enderecoCheckout) {
+
+            enderecoCheckout.value =
+                '';
+        }
+
+
+        definirTextoFrete(
+            'Calculando...'
+        );
+
+
+        const freteMensagem =
+            document.getElementById(
+                'freteMensagem'
+            );
+
+
+        if (freteMensagem) {
+
+            freteMensagem.textContent =
+                'Calculando o frete para o endereço selecionado...';
+        }
+
+
+        atualizarBotaoPagamento();
+
+
+        await calcularFrete(
+            enderecoEntregaId
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * CALCULAR FRETE
+     * ==========================================================
+     */
+
+    async function calcularFrete(enderecoId) {
+
+        if (!enderecoId) {
+            return;
+        }
+
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId) {
+
+            mostrarErro(
+                'Nenhum cliente foi selecionado.'
+            );
+
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        body.append(
+            'enderecoId',
+            enderecoId
+        );
+
+
+        body.append(
+            'clienteId',
+            clienteId
+        );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/frete',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível calcular o frete.'
+                );
+            }
+
+
+            valorFrete =
+                Number(
+                    data.frete
+                    ||
+                    0
+                );
+
+
+            enderecoEntregaId =
+                String(
+                    data.enderecoId
+                );
+
+
+            const enderecoCheckout =
+                document.getElementById(
+                    'enderecoIdCheckout'
+                );
+
+
+            if (enderecoCheckout) {
+
+                enderecoCheckout.value =
+                    enderecoEntregaId;
+            }
+
+
+            definirTextoFrete(
+                formatarMoeda(
+                    valorFrete
+                )
+            );
+
+
+            const freteMensagem =
+                document.getElementById(
+                    'freteMensagem'
+                );
+
+
+            if (freteMensagem) {
+
+                freteMensagem.textContent =
+                    'Frete calculado para o endereço selecionado.';
+            }
+
+
+            atualizarResumoFinanceiro(
+                data
+            );
+
+
+            atualizarBotaoPagamento();
+
+
+        } catch (erro) {
+
+            enderecoEntregaId = null;
+            valorFrete = 0;
+
+
+            const enderecoCheckout =
+                document.getElementById(
+                    'enderecoIdCheckout'
+                );
+
+
+            if (enderecoCheckout) {
+
+                enderecoCheckout.value =
+                    '';
+            }
+
+
+            definirTextoFrete(
+                'A calcular'
+            );
+
+
+            const freteMensagem =
+                document.getElementById(
+                    'freteMensagem'
+                );
+
+
+            if (freteMensagem) {
+
+                freteMensagem.textContent =
+                    erro.message;
+            }
+
+
+            atualizarBotaoPagamento();
+
+
+            mostrarErro(
+                erro.message
+            );
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * TEXTO DO FRETE
+     * ==========================================================
+     */
+
+    function definirTextoFrete(texto) {
+
+        const freteTexto =
+            document.getElementById(
+                'freteTexto'
+            );
+
+
+        const freteNaoCalculado =
+            document.getElementById(
+                'freteTextoNaoCalculado'
+            );
+
+
+        const summaryFrete =
+            document.getElementById(
+                'summaryFrete'
+            );
+
+
+        const summaryFreteNaoCalculado =
+            document.getElementById(
+                'summaryFreteNaoCalculado'
+            );
+
+
+        if (freteTexto) {
+
+            freteTexto.textContent =
+                texto;
+        }
+
+
+        if (freteNaoCalculado) {
+
+            freteNaoCalculado.textContent =
+                texto;
+        }
+
+
+        if (summaryFrete) {
+
+            summaryFrete.textContent =
+                texto;
+        }
+
+
+        if (summaryFreteNaoCalculado) {
+
+            summaryFreteNaoCalculado.textContent =
+                texto;
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * MODAL DE CUPONS
+     * ==========================================================
+     */
+
+    async function abrirModalCupons() {
+
+        if (obterQuantidadeItens() <= 0) {
+
+            mostrarErro(
+                'Adicione pelo menos um livro antes de selecionar cupons.'
+            );
+
+            return;
+        }
+
+
+        const modal =
+            document.getElementById(
+                'couponModal'
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+        modal.classList.add(
+            'open'
+        );
+
+
+        modal.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+
+
+        document.body.style.overflow =
+            'hidden';
+
+
+        await carregarCupons();
+    }
+
+
+    function fecharModalCupons() {
+
+        const modal =
+            document.getElementById(
+                'couponModal'
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+        modal.classList.remove(
+            'open'
+        );
+
+
+        modal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+
+        document.body.style.overflow =
+            '';
+    }
+
+
+    /*
+     * ==========================================================
+     * CARREGAR CUPONS DO BANCO
+     * ==========================================================
+     */
+
+    async function carregarCupons() {
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId) {
+
+            mostrarErro(
+                'Nenhum cliente foi selecionado.'
+            );
+
+            return;
+        }
+
+
+        const loading =
+            document.getElementById(
+                'couponLoading'
+            );
+
+
+        const empty =
+            document.getElementById(
+                'couponEmpty'
+            );
+
+
+        const list =
+            document.getElementById(
+                'couponList'
+            );
+
+
+        if (loading) {
+            loading.style.display = 'block';
+        }
+
+
+        if (empty) {
+            empty.style.display = 'none';
+        }
+
+
+        if (list) {
+            list.innerHTML = '';
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/cupons?clienteId='
+                    +
+                    encodeURIComponent(
+                        clienteId
+                    )
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível carregar os cupons.'
+                );
+            }
+
+
+            cuponsCarregados =
+                Array.isArray(data.cupons)
+                    ? data.cupons
+                    : [];
+
+
+            cupomPromocionalSelecionadoId =
+                data.cupomPromocionalSelecionadoId
+                ||
+                null;
+
+
+            cuponsTrocaSelecionadosIds =
+                Array.isArray(
+                    data.cuponsTrocaSelecionadosIds
+                )
+                    ? data.cuponsTrocaSelecionadosIds
+                    : [];
+
+
+            renderizarListaCupons();
+
+
+        } catch (erro) {
+
+            if (list) {
+
+                list.innerHTML =
+                    '<div class="coupon-list-empty">'
+                    +
+                    '<i class="bi bi-exclamation-circle"></i>'
+                    +
+                    escaparHtml(erro.message)
+                    +
+                    '</div>';
+            }
+
+
+        } finally {
+
+            if (loading) {
+                loading.style.display = 'none';
+            }
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * RENDERIZAR MODAL
+     * ==========================================================
+     */
+
+    function renderizarListaCupons() {
+
+        const list =
+            document.getElementById(
+                'couponList'
+            );
+
+
+        const empty =
+            document.getElementById(
+                'couponEmpty'
+            );
+
+
+        if (!list || !empty) {
+            return;
+        }
+
+
+        list.innerHTML = '';
+
+
+        if (cuponsCarregados.length === 0) {
+
+            empty.style.display =
+                'block';
+
+            return;
+        }
+
+
+        empty.style.display =
+            'none';
+
+
+        cuponsCarregados.forEach(
+            function (cupom) {
+
+                const card =
+                    document.createElement(
+                        'article'
+                    );
+
+
+                card.className =
+                    'coupon-card';
+
+
+                if (cupom.selecionado) {
+
+                    card.classList.add(
+                        'selected'
+                    );
+                }
+
+
+                const info =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                const cabecalho =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                cabecalho.className =
+                    'coupon-card-code';
+
+
+                const codigo =
+                    document.createElement(
+                        'strong'
+                    );
+
+
+                codigo.textContent =
+                    cupom.codigo
+                    ||
+                    'Cupom';
+
+
+                const tipo =
+                    document.createElement(
+                        'span'
+                    );
+
+
+                tipo.className =
+                    'coupon-type';
+
+
+                tipo.textContent =
+                    obterNomeTipoCupom(
+                        cupom.tipo
+                    );
+
+
+                cabecalho.appendChild(
+                    codigo
+                );
+
+
+                cabecalho.appendChild(
+                    tipo
+                );
+
+
+                info.appendChild(
+                    cabecalho
+                );
+
+
+                if (cupom.descricao) {
+
+                    const descricao =
+                        document.createElement(
+                            'p'
+                        );
+
+
+                    descricao.className =
+                        'coupon-card-description';
+
+
+                    descricao.textContent =
+                        cupom.descricao;
+
+
+                    info.appendChild(
+                        descricao
+                    );
+                }
+
+
+                const valor =
+                    document.createElement(
+                        'span'
+                    );
+
+
+                valor.className =
+                    'coupon-card-value';
+
+
+                valor.textContent =
+                    'Valor: '
+                    +
+                    formatarMoeda(
+                        cupom.valor
+                    );
+
+
+                info.appendChild(
+                    valor
+                );
+
+
+                const botao =
+                    document.createElement(
+                        'button'
+                    );
+
+
+                botao.type =
+                    'button';
+
+
+                botao.className =
+                    'button button-secondary coupon-card-action';
+
+
+                if (cupom.selecionado) {
+
+                    botao.classList.add(
+                        'selected'
+                    );
+
+
+                    botao.innerHTML =
+                        '<i class="bi bi-check-circle-fill"></i> Remover';
+
+
+                    botao.addEventListener(
+                        'click',
+                        function () {
+
+                            removerCupom(
+                                cupom.id
+                            );
+                        }
+                    );
+
+
+                } else {
+
+                    botao.innerHTML =
+                        '<i class="bi bi-plus-circle"></i> Aplicar';
+
+
+                    botao.addEventListener(
+                        'click',
+                        function () {
+
+                            selecionarCupom(
+                                cupom.id
+                            );
+                        }
+                    );
+                }
+
+
+                card.appendChild(
+                    info
+                );
+
+
+                card.appendChild(
+                    botao
+                );
+
+
+                list.appendChild(
+                    card
+                );
+            }
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * SELECIONAR CUPOM
+     * ==========================================================
+     */
+
+    async function selecionarCupom(cupomId) {
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId || !cupomId) {
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        body.append(
+            'cupomId',
+            cupomId
+        );
+
+
+        body.append(
+            'clienteId',
+            clienteId
+        );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/cupons/selecionar',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível aplicar o cupom.'
+                );
+            }
+
+
+            atualizarResumoFinanceiro(
+                data
+            );
+
+
+            await carregarCupons();
+
+
+            await atualizarCuponsAplicados();
+
+
+        } catch (erro) {
+
+            mostrarErro(
+                erro.message
+            );
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * REMOVER CUPOM
+     * ==========================================================
+     */
+
+    async function removerCupom(cupomId) {
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId || !cupomId) {
+            return;
+        }
+
+
+        const body =
+            new URLSearchParams();
+
+
+        body.append(
+            'cupomId',
+            cupomId
+        );
+
+
+        body.append(
+            'clienteId',
+            clienteId
+        );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/cupons/remover',
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+
+                        body:
+                            body.toString()
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.erro
+                    ||
+                    'Não foi possível remover o cupom.'
+                );
+            }
+
+
+            atualizarResumoFinanceiro(
+                data
+            );
+
+
+            await carregarCupons();
+
+
+            await atualizarCuponsAplicados();
+
+
+        } catch (erro) {
+
+            mostrarErro(
+                erro.message
+            );
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * CUPONS APLICADOS FORA DO MODAL
+     * ==========================================================
+     */
+
+    async function atualizarCuponsAplicados() {
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/cupons?clienteId='
+                    +
+                    encodeURIComponent(
+                        clienteId
+                    )
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+                return;
+            }
+
+
+            const cupons =
+                Array.isArray(data.cupons)
+                    ? data.cupons
+                    : [];
+
+
+            renderizarCuponsAplicados(
+                cupons
+            );
+
+
+        } catch (erro) {
+
+            /*
+             * Não bloqueia a página.
+             *
+             * O backend continua sendo a fonte definitiva
+             * dos cupons selecionados.
+             */
+        }
+    }
+
+
+    function renderizarCuponsAplicados(cupons) {
+
+        const container =
+            document.getElementById(
+                'cuponsAplicadosContainer'
+            );
+
+
+        if (!container) {
+            return;
+        }
+
+
+        container.innerHTML = '';
+
+
+        const selecionados =
+            cupons.filter(
+                function (cupom) {
+
+                    return cupom.selecionado === true;
+                }
+            );
+
+
+        if (selecionados.length === 0) {
+
+            const vazio =
+                document.createElement(
+                    'p'
+                );
+
+
+            vazio.className =
+                'coupon-empty-selection';
+
+
+            vazio.textContent =
+                'Nenhum cupom aplicado ao carrinho.';
+
+
+            container.appendChild(
+                vazio
+            );
+
+
+            return;
+        }
+
+
+        const titulo =
+            document.createElement(
+                'p'
+            );
+
+
+        titulo.className =
+            'applied-coupons-title';
+
+
+        titulo.textContent =
+            'Cupons selecionados';
+
+
+        container.appendChild(
+            titulo
+        );
+
+
+        selecionados.forEach(
+            function (cupom) {
+
+                const item =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                item.className =
+                    'applied-coupon';
+
+
+                const info =
+                    document.createElement(
+                        'div'
+                    );
+
+
+                info.className =
+                    'applied-coupon-info';
+
+
+                const codigo =
+                    document.createElement(
+                        'strong'
+                    );
+
+
+                codigo.textContent =
+                    cupom.codigo
+                    ||
+                    'Cupom';
+
+
+                const detalhe =
+                    document.createElement(
+                        'span'
+                    );
+
+
+                detalhe.textContent =
+                    obterNomeTipoCupom(
+                        cupom.tipo
+                    )
+                    +
+                    ' · '
+                    +
+                    formatarMoeda(
+                        cupom.valor
+                    );
+
+
+                info.appendChild(
+                    codigo
+                );
+
+
+                info.appendChild(
+                    detalhe
+                );
+
+
+                const remover =
+                    document.createElement(
+                        'button'
+                    );
+
+
+                remover.type =
+                    'button';
+
+
+                remover.className =
+                    'coupon-remove';
+
+
+                remover.innerHTML =
+                    '<i class="bi bi-x-circle"></i> Remover';
+
+
+                remover.addEventListener(
+                    'click',
+                    function () {
+
+                        removerCupom(
+                            cupom.id
+                        );
+                    }
+                );
+
+
+                item.appendChild(
+                    info
+                );
+
+
+                item.appendChild(
+                    remover
+                );
+
+
+                container.appendChild(
+                    item
+                );
+            }
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * NOME DO TIPO
+     * ==========================================================
+     */
+
+    function obterNomeTipoCupom(tipo) {
+
+        if (!tipo) {
+            return 'Cupom';
+        }
+
+
+        const valor =
+            String(tipo).toUpperCase();
+
+
+        if (valor === 'PROMOCIONAL') {
+            return 'Promocional';
+        }
+
+
+        if (valor === 'TROCA') {
+            return 'Troca';
+        }
+
+
+        return valor;
+    }
+
+
+    /*
+     * ==========================================================
+     * ATUALIZAR RESUMO FINANCEIRO
+     * ==========================================================
+     */
+
+    function atualizarResumoFinanceiro(data) {
+
+        if (!data) {
+            return;
+        }
+
+
+        atualizarTextoElemento(
+            'summarySubtotal',
+            formatarMoeda(
+                data.subtotal
+            )
+        );
+
+
+        if (data.frete !== undefined) {
+
+            valorFrete =
+                Number(
+                    data.frete
+                    ||
+                    0
+                );
+
+
+            if (enderecoEntregaId) {
+
+                definirTextoFrete(
+                    formatarMoeda(
+                        valorFrete
+                    )
+                );
+            }
+        }
+
+
+        atualizarLinhaDesconto(
+            'linhaDescontoPromocional',
+            'linhaDescontoPromocionalOculta',
+            'summaryDescontoPromocional',
+            'summaryDescontoPromocionalOculto',
+            data.descontoPromocional
+        );
+
+
+        atualizarLinhaDesconto(
+            'linhaCuponsTroca',
+            'linhaCuponsTrocaOculta',
+            'summaryCuponsTroca',
+            'summaryCuponsTrocaOculto',
+            data.valorCuponsTrocaAplicado
+        );
+
+
+        atualizarTextoElemento(
+            'summaryTotal',
+            formatarMoeda(
+                data.total
+            )
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * LINHAS DE DESCONTO
+     * ==========================================================
+     */
+
+    function atualizarLinhaDesconto(
+        idLinhaVisivel,
+        idLinhaOculta,
+        idValorVisivel,
+        idValorOculto,
+        valor
+    ) {
+
+        const numero =
+            Number(
+                valor || 0
+            );
+
+
+        const linhaVisivel =
+            document.getElementById(
+                idLinhaVisivel
+            );
+
+
+        const linhaOculta =
+            document.getElementById(
+                idLinhaOculta
+            );
+
+
+        const valorVisivel =
+            document.getElementById(
+                idValorVisivel
+            );
+
+
+        const valorOculto =
+            document.getElementById(
+                idValorOculto
+            );
+
+
+        if (numero > 0) {
+
+            if (linhaVisivel) {
+
+                linhaVisivel.style.display =
+                    'flex';
+            }
+
+
+            if (linhaOculta) {
+
+                linhaOculta.style.display =
+                    'flex';
+            }
+
+
+            if (valorVisivel) {
+
+                valorVisivel.textContent =
+                    '- '
+                    +
+                    formatarMoeda(
+                        numero
+                    );
+            }
+
+
+            if (valorOculto) {
+
+                valorOculto.textContent =
+                    '- '
+                    +
+                    formatarMoeda(
+                        numero
+                    );
+            }
+
+
+        } else {
+
+            if (linhaVisivel) {
+
+                linhaVisivel.style.display =
+                    'none';
+            }
+
+
+            if (linhaOculta) {
+
+                linhaOculta.style.display =
+                    'none';
+            }
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * ATUALIZAR TEXTO
+     * ==========================================================
+     */
+
+    function atualizarTextoElemento(
+        id,
+        texto
+    ) {
+
+        const elemento =
+            document.getElementById(
+                id
+            );
+
+
+        if (elemento) {
+
+            elemento.textContent =
+                texto;
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * RESUMO ATUAL
+     * ==========================================================
+     */
+
+    async function atualizarResumoAtual() {
+
+        const clienteId =
+            obterClienteIdPagina();
+
+
+        if (!clienteId) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    '/carrinho/api/resumo?clienteId='
+                    +
+                    encodeURIComponent(
+                        clienteId
+                    )
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+                return;
+            }
+
+
+            atualizarResumoFinanceiro(
+                data
+            );
+
+
+        } catch (erro) {
+
+            /*
+             * Não interrompe a inicialização da página.
+             */
+        }
+    }
+
+
+    /*
+     * ==========================================================
+     * BOTÃO DE PAGAMENTO
+     * ==========================================================
+     */
+
+    function atualizarBotaoPagamento() {
+
+        const paymentBtn =
+            document.getElementById(
+                'paymentBtn'
+            );
+
+
+        if (!paymentBtn) {
+            return;
+        }
+
+
+        const quantidadeItens =
+            obterQuantidadeItens();
+
+
+        if (quantidadeItens <= 0) {
+
+            paymentBtn.disabled =
+                true;
+
+            return;
+        }
+
+
+        if (!enderecoEntregaId) {
+
+            paymentBtn.disabled =
+                true;
+
+            return;
+        }
+
+
+        const enderecoCheckout =
+            document.getElementById(
+                'enderecoIdCheckout'
+            );
+
+
+        if (!enderecoCheckout) {
+
+            paymentBtn.disabled =
+                true;
+
+            return;
+        }
+
+
+        if (!enderecoCheckout.value) {
+
+            paymentBtn.disabled =
+                true;
+
+            return;
+        }
+
+
+        paymentBtn.disabled =
+            false;
+    }
+
+
+    /*
+     * ==========================================================
+     * VALIDAR PAGAMENTO
+     * ==========================================================
+     */
+
+    function validarPagamento() {
+
+        const quantidadeItens =
+            obterQuantidadeItens();
+
+
+        if (quantidadeItens <= 0) {
+
+            mostrarErro(
+                'O carrinho está vazio.'
+            );
+
+            return false;
+        }
+
+
+        if (!enderecoEntregaId) {
+
+            mostrarErro(
+                'Selecione um endereço de entrega.'
+            );
+
+            return false;
+        }
+
+
+        const enderecoCheckout =
+            document.getElementById(
+                'enderecoIdCheckout'
+            );
+
+
+        if (!enderecoCheckout
+            ||
+            !enderecoCheckout.value) {
+
+            mostrarErro(
+                'O endereço de entrega ainda não foi validado.'
+            );
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * ESCAPAR HTML
+     * ==========================================================
+     */
+
+    function escaparHtml(valor) {
+
+        const div =
+            document.createElement(
+                'div'
+            );
+
+
+        div.textContent =
+            valor
+            ||
+            '';
+
+
+        return div.innerHTML;
+    }
+
+
+    /*
+     * ==========================================================
+     * TECLA ESC
+     * ==========================================================
+     */
+
+    document.addEventListener(
+        'keydown',
+        function (event) {
+
+            if (event.key === 'Escape') {
+
+                fecharModalCupons();
+            }
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * INICIALIZAÇÃO
+     * ==========================================================
+     */
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        async function () {
+
+            /*
+             * Recupera endereço previamente validado pelo backend,
+             * quando houver.
+             */
+            const enderecoMarcado =
+                document.querySelector(
+                    'input[name="enderecoEntrega"]:checked'
+                );
+
+
+            if (enderecoMarcado) {
+
+                enderecoEntregaId =
+                    enderecoMarcado.value;
+
+
+                const enderecoCheckout =
+                    document.getElementById(
+                        'enderecoIdCheckout'
+                    );
+
+
+                if (enderecoCheckout) {
+
+                    enderecoCheckout.value =
+                        enderecoEntregaId;
+                }
+
+
+                /*
+                 * Se existe endereço persistido na sessão,
+                 * recalculamos o frete para garantir que o valor
+                 * continua válido para o carrinho atual.
+                 */
+                await calcularFrete(
+                    enderecoEntregaId
+                );
+            }
+
+
+            await atualizarResumoAtual();
+
+
+            await atualizarCuponsAplicados();
+
+
+            atualizarBotaoPagamento();
+
+
+            const checkoutForm = document.getElementById('checkoutForm');
+
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function (event) {
+                        if (!validarPagamento()) {
+                            event.preventDefault();
+                            return;
+                        }
+                        const paymentBtn = document.getElementById('paymentBtn');
+                        if (paymentBtn) {
+                            paymentBtn.disabled = true;
+                        }
+                    }
+                );
+            }
+        }
+    );
+</script>
+</body>
+</html>

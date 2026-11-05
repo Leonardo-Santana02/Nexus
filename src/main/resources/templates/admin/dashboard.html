@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de vendas | BookNexus</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/prototype.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="admin-layout">
+
+    <aside th:replace="~{admin/fragments/sidebar :: sidebar('dashboard')}"></aside>
+
+    <main class="admin-main">
+
+        <!-- TOPBAR -->
+        <header class="admin-topbar">
+            <div>
+                <p class="eyebrow">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    Análise
+                </p>
+                <h1>Dashboard de vendas</h1>
+                <p>Acompanhe o histórico de vendas por categoria ao longo dos meses.</p>
+            </div>
+        </header>
+
+        <!-- MENSAGEM DE ERRO -->
+        <div th:if="${erro}" class="inline-notice return-notice"
+             role="alert" style="margin-bottom: 18px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <p th:text="${erro}">Ocorreu um erro.</p>
+        </div>
+
+        <!-- AVISO DO CRITÉRIO -->
+        <div class="inline-notice" role="note" style="margin-bottom: 18px;">
+            <i class="bi bi-info-circle-fill"></i>
+            <p>
+                Considerando apenas pedidos com status <strong>Entregue</strong>.
+                Eixo horizontal agrupado por mês/ano. Valor em reais (R$).
+            </p>
+        </div>
+
+        <!-- FILTRO -->
+        <section class="dashboard-filter panel">
+
+            <div style="margin-bottom: 1rem;">
+                <strong>Período da análise</strong>
+                <small style="display: block; color: var(--ink-500);">
+                    Escolha o intervalo de datas e as categorias a comparar.
+                </small>
+            </div>
+
+            <form th:action="@{/admin/dashboard}" method="get">
+
+                <div style="display: flex; align-items: end; gap: 14px; flex-wrap: wrap;">
+
+                    <label style="display: flex; flex-direction: column; gap: 6px; min-width: 175px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #6c757d;">
+                            Data inicial
+                        </span>
+                        <input type="date"
+                               name="dataInicio"
+                               th:value="${dataInicio}"
+                               required
+                               style="height: 42px; padding: 0 12px;
+                                      border: 1px solid #dee2e6; border-radius: 10px;
+                                      background: #ffffff; color: #212529; font: inherit;">
+                    </label>
+
+                    <label style="display: flex; flex-direction: column; gap: 6px; min-width: 175px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #6c757d;">
+                            Data final
+                        </span>
+                        <input type="date"
+                               name="dataFim"
+                               th:value="${dataFim}"
+                               required
+                               style="height: 42px; padding: 0 12px;
+                                      border: 1px solid #dee2e6; border-radius: 10px;
+                                      background: #ffffff; color: #212529; font: inherit;">
+                    </label>
+
+                    <button type="submit"
+                            class="button button-primary"
+                            style="height: 42px; white-space: nowrap;">
+                        <i class="bi bi-funnel-fill"></i>
+                        Aplicar período
+                    </button>
+
+                    <a th:href="@{/admin/dashboard}"
+                       class="button button-ghost"
+                       style="height: 42px; white-space: nowrap;">
+                        <i class="bi bi-x-circle"></i>
+                        Limpar
+                    </a>
+
+                </div>
+
+                <!-- CATEGORIAS -->
+                <div style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;
+                                  color: var(--ink-700); font-size: 12px;
+                                  font-weight: 700;">
+                        Categorias (use Ctrl/Cmd para selecionar várias)
+                    </label>
+
+                    <select name="categorias"
+                            multiple
+                            size="6"
+                            required
+                            style="width: 100%; padding: 0.5rem;
+                                   border: 1px solid #cedfd1; border-radius: 8px;
+                                   font: inherit; font-size: 0.85rem;">
+                        <option th:each="cat : ${categoriasDisponiveis}"
+                                th:value="${cat}"
+                                th:text="${cat}"
+                                th:selected="${categoriasSelecionadas != null
+                                              and categoriasSelecionadas.contains(cat)}">
+                            Categoria
+                        </option>
+                    </select>
+
+                    <p th:if="${categoriasDisponiveis == null or #lists.isEmpty(categoriasDisponiveis)}"
+                       class="prototype-card-note"
+                       style="margin: 0.5rem 0 0;">
+                        <i class="bi bi-info-circle"></i>
+                        Nenhuma categoria disponível no sistema.
+                    </p>
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- KPIs -->
+        <section class="dashboard-kpis" aria-label="Indicadores de vendas"
+                 th:if="${temResultado}">
+
+            <article>
+                <span class="dashboard-icon revenue">
+                    <i class="bi bi-currency-dollar"></i>
+                </span>
+                <div>
+                    <small>Faturamento no período</small>
+                    <strong>
+                        R$ <span th:text="${#numbers.formatDecimal(resultado['totalGeral'], 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                    </strong>
+                    <em class="neutral">
+                        <i class="bi bi-info-circle"></i>
+                        Inclui desconto e frete rateados
+                    </em>
+                </div>
+            </article>
+
+            <article>
+                <span class="dashboard-icon orders">
+                    <i class="bi bi-tags-fill"></i>
+                </span>
+                <div>
+                    <small>Categorias comparadas</small>
+                    <strong th:text="${resultado['totalCategorias']}">0</strong>
+                    <em class="neutral">
+                        <i class="bi bi-dash"></i>
+                        Selecionadas pelo admin
+                    </em>
+                </div>
+            </article>
+
+            <article>
+                <span class="dashboard-icon ticket">
+                    <i class="bi bi-calendar3"></i>
+                </span>
+                <div>
+                    <small>Meses no período</small>
+                    <strong th:text="${resultado['totalMeses']}">0</strong>
+                    <em class="neutral">
+                        <i class="bi bi-dash"></i>
+                        Agrupados por mês/ano
+                    </em>
+                </div>
+            </article>
+
+            <article>
+                <span class="dashboard-icon books">
+                    <i class="bi bi-bookshelf"></i>
+                </span>
+                <div>
+                    <small>Itens vendidos</small>
+                    <strong th:text="${resultado['totalItens']}">0</strong>
+                    <em class="neutral">
+                        <i class="bi bi-dash"></i>
+                        Unidades no período
+                    </em>
+                </div>
+            </article>
+
+        </section>
+
+        <!-- GRÁFICO -->
+        <section class="dashboard-grid"
+                 style="display: block; width: 100%;"
+                 th:if="${temResultado}">
+
+            <article class="panel chart-panel"
+                     style="width: 100%; padding-bottom: 30px;">
+
+                <div class="panel-title">
+                    <div>
+                        <h2>Histórico de vendas por categoria</h2>
+                        <p>Valor total de vendas em reais, agrupado por mês/ano.</p>
+                    </div>
+
+                    <span class="chart-legend">
+                        <i></i>
+                        Categorias
+                    </span>
+                </div>
+
+                <!-- RESUMO DO PERÍODO -->
+                <div style="display: flex; align-items: center;
+                            justify-content: space-between; gap: 20px;
+                            flex-wrap: wrap; margin-top: 22px;
+                            padding: 16px 18px; border: 1px solid #eef0f2;
+                            border-radius: 12px; background: #fafbfc;">
+
+                    <div>
+                        <small style="display: block; color: #6c757d; margin-bottom: 4px;">
+                            Período exibido
+                        </small>
+                        <strong>
+                            <span th:text="${#temporals.format(resultado['dataInicio'], 'dd/MM/yyyy')}">01/01/2026</span>
+                            —
+                            <span th:text="${#temporals.format(resultado['dataFim'], 'dd/MM/yyyy')}">31/12/2026</span>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <small style="display: block; color: #6c757d; margin-bottom: 4px;">
+                            Total de categorias
+                        </small>
+                        <strong th:text="${resultado['totalCategorias']}">0</strong>
+                    </div>
+
+                    <div>
+                        <small style="display: block; color: #6c757d; margin-bottom: 4px;">
+                            Total de meses
+                        </small>
+                        <strong th:text="${resultado['totalMeses']}">0</strong>
+                    </div>
+
+                    <div>
+                        <small style="display: block; color: #6c757d; margin-bottom: 4px;">
+                            Faturamento
+                        </small>
+                        <strong>
+                            R$ <span th:text="${#numbers.formatDecimal(resultado['totalGeral'], 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                        </strong>
+                    </div>
+
+                </div>
+
+                <!-- CANVAS -->
+                <div style="position: relative; height: 480px; margin-top: 26px;">
+                    <canvas id="graficoVendas"></canvas>
+                </div>
+
+            </article>
+
+        </section>
+
+        <!-- SEM RESULTADO -->
+        <section th:if="${!temResultado}" class="panel"
+                 style="text-align: center; padding: 3rem 1rem; color: var(--ink-500);">
+            <i class="bi bi-bar-chart"
+               style="display: block; margin-bottom: 1rem; color: #b8c9bd; font-size: 3rem;"></i>
+            <p style="margin: 0; font-size: 0.9rem;">
+                Selecione o período e as categorias para visualizar o gráfico.
+            </p>
+        </section>
+
+    </main>
+
+</div>
+
+<!-- SCRIPT DO GRÁFICO -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    (function () {
+
+        const temResultado = /*[[${temResultado}]]*/ false;
+
+        if (!temResultado) {
+            return;
+        }
+
+        // ------------------------------------------------------
+        // Acesso por colchetes evita SpelEvaluationException
+        // quando o Map não tem a chave (ex.: HashMap vazio).
+        // ------------------------------------------------------
+        let labels = /*[[${resultado['labels']}]]*/ [];
+        let datasetsRaw = /*[[${resultado['datasets']}]]*/ [];
+
+        // Fallback defensivo: se algo vier nulo/estranho, normaliza
+        if (!Array.isArray(labels)) {
+            labels = [];
+        }
+        if (!Array.isArray(datasetsRaw)) {
+            datasetsRaw = [];
+        }
+
+        const canvas = document.getElementById('graficoVendas');
+
+        if (!canvas) {
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        function formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 2
+            }).format(value);
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: datasetsRaw
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 10,
+                            font: { size: 12, weight: 'bold' },
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y || 0;
+                                return label + ': ' + formatBRL(value);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Mês/Ano',
+                            font: { weight: 'bold', size: 13 },
+                            color: '#666'
+                        },
+                        grid: {
+                            color: '#e0e0e0'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Valor (R$)',
+                            font: { weight: 'bold', size: 13 },
+                            color: '#666'
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return formatBRL(value);
+                            }
+                        },
+                        grid: {
+                            color: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        });
+
+    })();
+
+    /*]]>*/
+</script>
+
+</body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Detalhes do pedido | Administração BookNexus</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/prototype.css">
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <aside th:replace="~{admin/fragments/sidebar :: sidebar('pedidos')}"></aside>
+
+    <main class="admin-main">
+
+        <!-- ============================================================
+             BREADCRUMB
+             ============================================================ -->
+        <nav class="admin-breadcrumb" aria-label="Caminho de navegação">
+            <a href="/admin/pedidos">Pedidos</a>
+            <i class="bi bi-chevron-right"></i>
+            <span th:text="|Pedido &#35;BN-${#temporals.format(pedido.dataCriacao, 'yyyy')}-${#numbers.formatInteger(pedido.id, 3)}|">
+                Pedido #BN-2026-000
+            </span>
+        </nav>
+
+        <!-- ============================================================
+             CABEÇALHO
+             ============================================================ -->
+        <header class="admin-order-detail-head">
+
+            <div>
+                <p class="eyebrow">
+                    <i class="bi bi-bag-check-fill"></i>
+                    Gestão de vendas
+                </p>
+
+                <h1 th:text="|Pedido &#35;BN-${#temporals.format(pedido.dataCriacao, 'yyyy')}-${#numbers.formatInteger(pedido.id, 3)}|">
+                    Pedido #BN-2026-000
+                </h1>
+
+                <p th:text="|Realizado em ${#temporals.format(pedido.dataCriacao, 'dd/MM/yyyy')}, às ${#temporals.format(pedido.dataCriacao, 'HH:mm')} - Total de R&#36; ${#numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}|">
+                    Realizado em 01/01/2026 - Total de R$ 0,00
+                </p>
+            </div>
+
+            <div class="admin-order-head-actions">
+
+                <!-- Badge do status atual -->
+                <span th:switch="${pedido.status != null ? pedido.status.name() : ''}">
+
+                    <span th:case="'EM_PROCESSAMENTO'" class="admin-status processing">
+                        <i class="bi bi-hourglass-split"></i> Em processamento
+                    </span>
+
+                    <span th:case="'APROVADO'" class="admin-status active">
+                        <i class="bi bi-check-circle-fill"></i> Aprovado
+                    </span>
+
+                    <span th:case="'EM_TRANSPORTE'" class="admin-status warning">
+                        <i class="bi bi-truck"></i> Em transporte
+                    </span>
+
+                    <span th:case="'ENTREGUE'" class="admin-status active">
+                        <i class="bi bi-check-circle-fill"></i> Entregue
+                    </span>
+
+                    <span th:case="'EM_TROCA'" class="admin-status warning">
+                        <i class="bi bi-arrow-repeat"></i> Em troca
+                    </span>
+
+                    <span th:case="'TROCA_AUTORIZADA'" class="admin-status authorized">
+                        <i class="bi bi-check2-circle"></i> Troca autorizada
+                    </span>
+
+                    <span th:case="'TROCA_RECUSADA'" class="admin-status inactive">
+                        <i class="bi bi-x-octagon-fill"></i> Troca recusada
+                    </span>
+
+                    <span th:case="'CANCELADO'" class="admin-status inactive">
+                        <i class="bi bi-x-circle-fill"></i> Cancelado
+                    </span>
+
+                    <span th:case="*" class="admin-status">
+                        <i class="bi bi-question-circle"></i>
+                        <span th:text="${pedido.status}">Status</span>
+                    </span>
+                </span>
+
+                <a class="button button-ghost" href="/admin/pedidos">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar aos pedidos
+                </a>
+
+            </div>
+
+        </header>
+
+        <!-- ============================================================
+             MENSAGENS FLASH
+             ============================================================ -->
+        <div th:if="${mensagemSucesso}" class="inline-notice" role="alert"
+             style="margin-bottom: 20px;">
+            <i class="bi bi-check-circle-fill"></i>
+            <p th:text="${mensagemSucesso}">Operação realizada com sucesso.</p>
+        </div>
+
+        <div th:if="${erro}" class="inline-notice return-notice" role="alert"
+             style="margin-bottom: 20px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <p th:text="${erro}">Ocorreu um erro.</p>
+        </div>
+
+        <!-- ============================================================
+             TIMELINE DE STATUS
+             ============================================================ -->
+        <section class="admin-order-timeline" aria-label="Histórico do pedido">
+
+            <!-- Etapa 1: Pedido confirmado (sempre concluída) -->
+            <div class="admin-timeline-step done">
+                <span>
+                    <i class="bi bi-check-lg"></i>
+                </span>
+
+                <div>
+                    <strong>Pedido confirmado</strong>
+                    <small th:text="${#temporals.format(pedido.dataCriacao, 'dd MMM. HH:mm')}">
+                        01 jan. 00:00
+                    </small>
+                </div>
+            </div>
+
+            <!-- Etapa 2: Aprovado (concluída se status for APROVADO, EM_TRANSPORTE, ENTREGUE, EM_TROCA, TROCA_AUTORIZADA) -->
+            <div class="admin-timeline-step"
+                 th:classappend="${pedido.status != null
+                                    and (pedido.status.name() == 'APROVADO'
+                                      or pedido.status.name() == 'EM_TRANSPORTE'
+                                      or pedido.status.name() == 'ENTREGUE'
+                                      or pedido.status.name() == 'EM_TROCA'
+                                      or pedido.status.name() == 'TROCA_AUTORIZADA')
+                                    ? 'done' : ''}">
+                <span>
+                    <i class="bi bi-credit-card-fill"></i>
+                </span>
+
+                <div>
+                    <strong>Pagamento aprovado</strong>
+                    <small th:if="${pedido.pagamento != null and pedido.pagamento.status != null}"
+                           th:text="${#strings.toLowerCase(pedido.pagamento.status.name())}">
+                        aprovado
+                    </small>
+                    <small th:if="${pedido.pagamento == null or pedido.pagamento.status == null}">
+                        aguardando
+                    </small>
+                </div>
+            </div>
+
+            <!-- Etapa 3: Em transporte (concluída se status for EM_TRANSPORTE, ENTREGUE, EM_TROCA, TROCA_AUTORIZADA) -->
+            <div class="admin-timeline-step"
+                 th:classappend="${pedido.status != null
+                                    and (pedido.status.name() == 'EM_TRANSPORTE'
+                                      or pedido.status.name() == 'ENTREGUE'
+                                      or pedido.status.name() == 'EM_TROCA'
+                                      or pedido.status.name() == 'TROCA_AUTORIZADA')
+                                    ? 'done' : ''}">
+                <span>
+                    <i class="bi bi-truck"></i>
+                </span>
+
+                <div>
+                    <strong>Em transporte</strong>
+                    <small>aguardando</small>
+                </div>
+            </div>
+
+            <!-- Etapa 4: Entregue (concluída se status for ENTREGUE, EM_TROCA, TROCA_AUTORIZADA) -->
+            <div class="admin-timeline-step"
+                 th:classappend="${pedido.status != null
+                                    and (pedido.status.name() == 'ENTREGUE'
+                                      or pedido.status.name() == 'EM_TROCA'
+                                      or pedido.status.name() == 'TROCA_AUTORIZADA')
+                                    ? 'done' : ''}">
+                <span>
+                    <i class="bi bi-house-check-fill"></i>
+                </span>
+
+                <div>
+                    <strong>Entrega confirmada</strong>
+                    <small>aguardando</small>
+                </div>
+            </div>
+
+        </section>
+
+        <div class="admin-order-detail-layout">
+
+            <section class="checkout-content">
+
+                <!-- ============================================================
+                     CLIENTE
+                     ============================================================ -->
+                <article class="panel admin-order-customer">
+
+                    <div class="panel-title">
+
+                        <div>
+                            <h2>Cliente</h2>
+                            <p>Dados de quem realizou a compra.</p>
+                        </div>
+
+                        <a class="plain-link"
+                           th:if="${pedido.cliente != null}"
+                           th:href="@{/admin/clientes/{id}(id=${pedido.cliente.id})}">
+                            Ver perfil do cliente
+                        </a>
+
+                    </div>
+
+                    <div class="admin-customer-card" th:if="${pedido.cliente != null}">
+
+                        <span class="client-large-avatar"
+                              th:text="${#strings.toUpperCase(#strings.substring(pedido.cliente.nome, 0, 2))}">
+                            MC
+                        </span>
+
+                        <div>
+                            <strong th:text="${pedido.cliente.nome}">Cliente</strong>
+
+                            <small th:text="|ID &#35;CLI-${#numbers.formatInteger(pedido.cliente.id, 6)}|">
+                                ID #CLI-000000
+                            </small>
+                        </div>
+
+                        <div class="admin-customer-contact">
+
+                            <span th:if="${pedido.cliente.email != null}">
+                                <i class="bi bi-envelope-fill"></i>
+                                <span th:text="${pedido.cliente.email}">email@email.com</span>
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- ============================================================
+                     ITENS DO PEDIDO
+                     ============================================================ -->
+                <article class="panel admin-order-items">
+
+                    <div class="panel-title">
+
+                        <div>
+                            <h2>Itens do pedido</h2>
+                            <p th:text="|${pedido.quantidadeTotalItens} ${pedido.quantidadeTotalItens == 1 ? 'livro adquirido' : 'livros adquiridos'}.|">
+                                0 livros adquiridos.
+                            </p>
+                        </div>
+
+                        <span class="item-count"
+                              th:text="${#numbers.formatInteger(pedido.quantidadeTotalItens, 2)}">
+                            00
+                        </span>
+
+                    </div>
+
+                    <!-- Linhas dinâmicas de itens -->
+                    <div class="admin-order-item" th:each="item : ${pedido.itens}">
+
+                        <span class="mini-cover cover-sage">
+                            <span th:if="${item.produto != null and item.produto.genero != null}"
+                                  th:text="${item.produto.genero}">
+                                Gênero
+                            </span>
+                            <span th:if="${item.produto == null or item.produto.genero == null}">
+                                Livro
+                            </span>
+
+                            <b th:text="${item.produto != null ? item.produto.titulo : 'Produto'}">
+                                Título
+                            </b>
+                        </span>
+
+                        <div>
+                            <span class="book-tag"
+                                  th:if="${item.produto != null and item.produto.genero != null}"
+                                  th:text="${item.produto.genero}">
+                                Gênero
+                            </span>
+
+                            <h3 th:text="${item.produto != null ? item.produto.titulo : 'Produto'}">
+                                Título
+                            </h3>
+
+                            <p th:if="${item.produto != null}"
+                               th:text="|${item.produto.autor} - ISBN ${item.produto.isbn}|">
+                                Autor - ISBN
+                            </p>
+                            <p th:if="${item.produto == null}">
+                                Produto indisponível
+                            </p>
+                        </div>
+
+                        <span class="admin-item-quantity">
+                            Qtd.
+                            <strong th:text="${item.quantidade}">0</strong>
+                        </span>
+
+                        <strong th:text="|R&#36; ${#numbers.formatDecimal(item.precoTotal, 1, 'POINT', 2, 'COMMA')}|">
+                            R$ 0,00
+                        </strong>
+
+                    </div>
+
+                </article>
+
+                <!-- ============================================================
+                     CONTROLE DE STATUS (FORMULÁRIOS FUNCIONAIS)
+                     ============================================================ -->
+                <article class="panel decision-card" th:if="${pedido.status != null}">
+
+                    <div>
+                        <h2>Controle de status do pedido</h2>
+                        <p>Atualize o andamento administrativo do pedido.</p>
+                    </div>
+
+                    <div>
+                        <p class="eyebrow">Status atual</p>
+
+                        <div class="decision-options">
+
+                            <!-- Mostra o status atual destacado -->
+                            <button type="button" class="selected" disabled>
+                                <i class="bi bi-flag-fill"></i>
+                                <span>
+                                    <strong th:text="${pedido.status.descricao}">Status</strong>
+                                    <small>Status atual do pedido</small>
+                                </span>
+                            </button>
+
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="eyebrow">Próximas ações disponíveis</p>
+
+                        <div class="decision-options">
+
+                            <!-- EM_PROCESSAMENTO -> APROVADO -->
+                            <form th:if="${pedido.status.name() == 'EM_PROCESSAMENTO'}"
+                                  th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}"
+                                  method="post"
+                                  style="display: contents;">
+                                <input type="hidden" name="novoStatus" value="APROVADO">
+                                <button type="submit">
+                                    <i class="bi bi-credit-card"></i>
+                                    <span>
+                                        <strong>Aprovar pedido</strong>
+                                        <small>Confirmar o pagamento e aprovar o pedido</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                            <!-- APROVADO -> EM_TRANSPORTE -->
+                            <form th:if="${pedido.status.name() == 'APROVADO'}"
+                                  th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}"
+                                  method="post"
+                                  style="display: contents;">
+                                <input type="hidden" name="novoStatus" value="EM_TRANSPORTE">
+                                <button type="submit">
+                                    <i class="bi bi-truck"></i>
+                                    <span>
+                                        <strong>Despachar para entrega</strong>
+                                        <small>Registrar o envio do pedido ao cliente</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                            <!-- EM_TRANSPORTE -> ENTREGUE -->
+                            <form th:if="${pedido.status.name() == 'EM_TRANSPORTE'}"
+                                  th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}"
+                                  method="post"
+                                  style="display: contents;">
+                                <input type="hidden" name="novoStatus" value="ENTREGUE">
+                                <button type="submit">
+                                    <i class="bi bi-house-check"></i>
+                                    <span>
+                                        <strong>Confirmar entrega</strong>
+                                        <small>Confirmar a entrega do pedido ao cliente</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                            <!-- Estados finais: nenhuma ação -->
+                            <p th:if="${pedido.status.name() == 'ENTREGUE'
+                                     or pedido.status.name() == 'CANCELADO'
+                                     or pedido.status.name() == 'TROCA_RECUSADA'
+                                     or pedido.status.name() == 'TROCA_AUTORIZADA'
+                                     or pedido.status.name() == 'EM_TROCA'}"
+                               class="prototype-card-note"
+                               style="margin: 0;">
+                                <i class="bi bi-info-circle"></i>
+                                Este pedido está em um estado que não permite novas transições administrativas diretas.
+                            </p>
+
+                        </div>
+                    </div>
+
+                    <div class="decision-footer">
+                        <a class="button button-ghost" href="/admin/pedidos">
+                            <i class="bi bi-arrow-left"></i>
+                            Voltar
+                        </a>
+                    </div>
+
+                </article>
+
+                <!-- ============================================================
+                     ENDEREÇO E PAGAMENTO
+                     ============================================================ -->
+                <div class="admin-order-info-grid">
+
+                    <!-- ENDEREÇO -->
+                    <article class="panel admin-info-card" th:if="${pedido.enderecoEntrega != null}">
+
+                        <i class="bi bi-geo-alt-fill"></i>
+
+                        <h2>Entrega</h2>
+
+                        <p>
+                            <strong th:text="${pedido.enderecoEntrega.apelido != null
+                                                ? pedido.enderecoEntrega.apelido
+                                                : 'Endereço de entrega'}">
+                                Endereço
+                            </strong>
+                            <br>
+                            <span th:text="${pedido.enderecoEntrega.tipoLogradouro != null
+                                              ? pedido.enderecoEntrega.tipoLogradouro + ' ' + pedido.enderecoEntrega.logradouro
+                                              : pedido.enderecoEntrega.logradouro}">
+                                Rua
+                            </span>,
+                            <span th:text="${pedido.enderecoEntrega.numero}">0</span>
+                            <span th:if="${pedido.enderecoEntrega.complemento != null and !pedido.enderecoEntrega.complemento.isBlank()}"
+                                  th:text="| - ${pedido.enderecoEntrega.complemento}|">
+                                - Complemento
+                            </span>
+                            <br>
+                            <span th:text="${pedido.enderecoEntrega.bairro}">Bairro</span> -
+                            <span th:text="|${pedido.enderecoEntrega.cidade}, ${pedido.enderecoEntrega.uf}|">
+                                Cidade, UF
+                            </span>
+                            <br>
+                            <span th:text="|CEP ${pedido.enderecoEntrega.cep}|">CEP 00000-000</span>
+                        </p>
+
+                        <span>
+                            <i class="bi bi-truck"></i>
+                            Entrega padrão
+                        </span>
+
+                    </article>
+
+                    <!-- PAGAMENTO -->
+                    <article class="panel admin-info-card" th:if="${pedido.pagamento != null}">
+
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+
+                        <h2>Pagamento</h2>
+
+                        <p>
+                            <strong th:text="${pedido.pagamento.formaPagamento != null
+                                                ? pedido.pagamento.formaPagamento
+                                                : 'Forma de pagamento'}">
+                                Cartão
+                            </strong>
+                            <br>
+                            <span th:text="|Valor original: R&#36; ${#numbers.formatDecimal(pedido.pagamento.valorOriginal, 1, 'POINT', 2, 'COMMA')}|">
+                                Valor original
+                            </span>
+                            <span th:if="${pedido.pagamento.valorDesconto != null
+                                       and pedido.pagamento.valorDesconto.signum() > 0}">
+                                <br>
+                                <span th:text="|Desconto: - R&#36; ${#numbers.formatDecimal(pedido.pagamento.valorDesconto, 1, 'POINT', 2, 'COMMA')}|">
+                                    Desconto
+                                </span>
+                            </span>
+                            <br>
+                            <span th:text="|Valor pago: R&#36; ${#numbers.formatDecimal(pedido.pagamento.valorPago, 1, 'POINT', 2, 'COMMA')}|">
+                                Valor pago
+                            </span>
+                        </p>
+
+                        <span th:if="${pedido.pagamento.status != null and pedido.pagamento.status.name() == 'APROVADO'}"
+                              class="payment-approved">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Pagamento aprovado
+                        </span>
+                        <span th:if="${pedido.pagamento.status != null and pedido.pagamento.status.name() == 'PENDENTE'}">
+                            <i class="bi bi-hourglass-split"></i>
+                            Pagamento pendente
+                        </span>
+                        <span th:if="${pedido.pagamento.status != null and pedido.pagamento.status.name() == 'REJEITADO'}"
+                              class="payment-rejected">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Pagamento rejeitado
+                        </span>
+                        <span th:if="${pedido.pagamento.status != null and pedido.pagamento.status.name() == 'CANCELADO'}">
+                            <i class="bi bi-x-circle-fill"></i>
+                            Pagamento cancelado
+                        </span>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================================
+                 RESUMO FINANCEIRO
+                 ============================================================ -->
+            <aside class="admin-order-summary">
+
+                <h2>Resumo financeiro</h2>
+
+                <div>
+                    <span>Subtotal dos itens</span>
+                    <strong th:text="|R&#36; ${#numbers.formatDecimal(pedido.subtotal, 1, 'POINT', 2, 'COMMA')}|">
+                        R$ 0,00
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Frete</span>
+                    <strong th:text="|R&#36; ${#numbers.formatDecimal(pedido.valorFrete, 1, 'POINT', 2, 'COMMA')}|">
+                        R$ 0,00
+                    </strong>
+                </div>
+
+                <div class="admin-summary-discount"
+                     th:if="${pedido.descontoPromocional != null
+                          and pedido.descontoPromocional.signum() > 0}">
+                    <span th:text="${pedido.codigoCupomPromocional != null
+                                      ? 'Cupom ' + pedido.codigoCupomPromocional
+                                      : 'Desconto'}">
+                        Desconto
+                    </span>
+                    <strong th:text="|- R&#36; ${#numbers.formatDecimal(pedido.descontoPromocional, 1, 'POINT', 2, 'COMMA')}|">
+                        - R$ 0,00
+                    </strong>
+                </div>
+
+                <hr>
+
+                <div class="admin-summary-total">
+                    <span>Total pago</span>
+                    <strong th:text="|R&#36; ${#numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}|">
+                        R$ 0,00
+                    </strong>
+                </div>
+
+                <small th:if="${pedido.pagamento != null and pedido.pagamento.status != null}"
+                       th:text="|Pagamento ${#strings.toLowerCase(pedido.pagamento.status.name())}.|">
+                    Pagamento aprovado.
+                </small>
+
+                <div class="admin-order-management">
+
+                    <h3>Ações do pedido</h3>
+
+                    <a class="button button-ghost"
+                       th:href="@{/admin/pedidos}">
+                        <i class="bi bi-list-ul"></i>
+                        Ver todos os pedidos
+                    </a>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

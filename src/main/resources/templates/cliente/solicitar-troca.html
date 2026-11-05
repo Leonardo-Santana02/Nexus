@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar troca | BookNexus</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/prototype.css">
+</head>
+<body>
+
+<header class="shop-header compact-header">
+    <div class="shop-header-main">
+        <a class="brand" href="/home">
+            <span class="brand-mark"><i class="bi bi-book-half"></i></span>
+            <span>BookNexus</span>
+        </a>
+        <nav class="header-links" aria-label="Ações da conta">
+            <a href="/home"><i class="bi bi-house-door"></i><span>Loja</span></a>
+            <a href="/pedidos"><i class="bi bi-person-circle-fill"></i><span>Minha conta</span></a>
+            <a class="cart-link" href="/carrinho">
+                <i class="bi bi-bag-heart"></i>
+                <span>Carrinho</span>
+            </a>
+        </nav>
+    </div>
+</header>
+
+<main class="subpage">
+    <div class="page-shell narrow-shell">
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" aria-label="Caminho de navegação">
+            <a href="/home">Início</a>
+            <i class="bi bi-chevron-right"></i>
+            <a href="/pedidos">Meus pedidos</a>
+            <i class="bi bi-chevron-right"></i>
+            <a th:href="@{/admin/pedidos}">
+                Pedido #<span th:text="${'BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">BN-2026-000</span>
+            </a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Solicitar troca</span>
+        </nav>
+
+        <!-- Título -->
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Pedido #<span th:text="${'BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">BN-2026-000</span>
+                </p>
+                <h1>Solicitar troca ou devolução</h1>
+                <p>Selecione os itens e conte o que aconteceu. Sua solicitação será analisada pelo administrador.</p>
+            </div>
+        </div>
+
+        <!-- Mensagens flash -->
+        <div th:if="${mensagemSucesso}" class="inline-notice" role="alert" style="margin-bottom: 18px;">
+            <i class="bi bi-check-circle-fill"></i>
+            <p th:text="${mensagemSucesso}">Operação realizada com sucesso.</p>
+        </div>
+        <div th:if="${erro}" class="inline-notice return-notice" role="alert" style="margin-bottom: 18px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <p th:text="${erro}">Ocorreu um erro.</p>
+        </div>
+
+        <!-- Formulário -->
+        <form th:action="@{/devolucoes/solicitar}" method="post">
+            <input type="hidden" name="pedidoId" th:value="${pedido.id}">
+
+            <div class="return-layout">
+
+                <section class="checkout-content">
+
+                    <!-- Itens -->
+                    <article class="panel return-panel">
+                        <div class="panel-title">
+                            <div>
+                                <h2>1. Selecione os itens</h2>
+                                <p>Você pode solicitar troca de um ou mais itens entregues.</p>
+                            </div>
+                        </div>
+
+                        <label class="return-item"
+                               th:each="item : ${pedido.itens}"
+                               th:for="'item-' + ${item.id}">
+
+                            <input type="checkbox"
+                                   name="itensIds"
+                                   th:id="'item-' + ${item.id}"
+                                   th:value="${item.id}"
+                                   class="item-checkbox"
+                                   th:attr="data-preco=${item.precoTotal}">
+
+                            <span class="check-mark">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="mini-cover cover-sage">
+                                <b th:text="${item.produto != null ? item.produto.titulo : 'Produto'}">
+                                    Título
+                                </b>
+                            </span>
+
+                            <span class="return-product">
+                                <strong th:text="${item.produto != null ? item.produto.titulo : 'Produto'}">
+                                    Título
+                                </strong>
+                                <small>
+                                    <span th:text="${item.produto != null ? item.produto.autor : 'Autor'}">Autor</span>
+                                    ·
+                                    <span th:text="${item.quantidade}">0</span>
+                                    <span th:text="${item.quantidade == 1 ? 'unidade' : 'unidades'}">unidade</span>
+                                </small>
+                                <b th:text="${'R$ ' + #numbers.formatDecimal(item.precoTotal, 1, 'POINT', 2, 'COMMA')}">
+                                    R$ 0,00
+                                </b>
+                            </span>
+                        </label>
+
+                        <p th:if="${pedido.itens == null or #lists.isEmpty(pedido.itens)}"
+                           class="prototype-card-note">
+                            <i class="bi bi-info-circle"></i>
+                            Este pedido não possui itens para devolução.
+                        </p>
+                    </article>
+
+                    <!-- Motivo -->
+                    <article class="panel return-reason">
+                        <div class="panel-title">
+                            <div>
+                                <h2>2. Informe o motivo</h2>
+                                <p>Essas informações ajudam na análise da solicitação.</p>
+                            </div>
+                        </div>
+
+                        <label for="motivo">Motivo da solicitação</label>
+                        <select id="motivo" name="motivo" required>
+                            <option value="">Selecione um motivo...</option>
+                            <option th:each="m : ${motivos}"
+                                    th:value="${m}"
+                                    th:text="${m.descricao}">
+                                Motivo
+                            </option>
+                        </select>
+
+                        <label for="justificativa">
+                            Conte mais detalhes <span>(opcional)</span>
+                        </label>
+                        <textarea id="justificativa"
+                                  name="justificativa"
+                                  rows="4"
+                                  maxlength="500"
+                                  placeholder="Descreva brevemente o que aconteceu."></textarea>
+                    </article>
+
+                    <!-- Aviso -->
+                    <article class="inline-notice return-notice">
+                        <i class="bi bi-lightbulb-fill"></i>
+                        <p>
+                            Após o envio, a solicitação ficará disponível para análise administrativa
+                            e o pedido terá o status <strong>Em troca</strong>.
+                        </p>
+                    </article>
+
+                </section>
+
+                <!-- Aside -->
+                <aside class="order-summary-card">
+
+                    <h2>Resumo da solicitação</h2>
+
+                    <div class="summary-row">
+                        <span>Pedido</span>
+                        <strong>
+                            #<span th:text="${'BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">BN-2026-000</span>
+                        </strong>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Itens selecionados</span>
+                        <strong id="itensSelecionados">0</strong>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="summary-row total">
+                        <span>Valor estimado</span>
+                        <strong>
+                            R$ <span id="valorEstimado">0,00</span>
+                        </strong>
+                    </div>
+
+                    <small class="installments">
+                        O valor poderá ser convertido em cupom de troca após a análise.
+                    </small>
+
+                    <button type="submit" class="button button-primary summary-action">
+                        Enviar solicitação
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <a class="summary-return" th:href="@{/pedidos}">
+                        <i class="bi bi-arrow-left"></i>
+                        Voltar aos meus pedidos
+                    </a>
+
+                </aside>
+
+            </div>
+        </form>
+
+    </div>
+</main>
+
+<!-- JS simples para atualizar o resumo conforme o cliente marca/desmarca -->
+<script>
+    (function () {
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        const elQtd = document.getElementById('itensSelecionados');
+        const elValor = document.getElementById('valorEstimado');
+
+        function formatar(valor) {
+            return valor.toFixed(2).replace('.', ',');
+        }
+
+        function atualizar() {
+            let qtd = 0;
+            let total = 0;
+
+            checkboxes.forEach(function (cb) {
+                if (cb.checked) {
+                    qtd += 1;
+                    const preco = parseFloat(cb.dataset.preco || '0');
+                    if (!isNaN(preco)) {
+                        total += preco;
+                    }
+                }
+            });
+
+            elQtd.textContent = qtd;
+            elValor.textContent = formatar(total);
+        }
+
+        checkboxes.forEach(function (cb) {
+            cb.addEventListener('change', atualizar);
+        });
+
+        atualizar();
+    })();
+</script>
+
+</body>
+</html>

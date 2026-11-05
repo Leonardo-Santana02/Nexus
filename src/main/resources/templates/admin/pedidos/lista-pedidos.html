@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos | BookNexus</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/prototype.css">
+</head>
+<body>
+<div class="admin-layout">
+    <aside th:replace="~{admin/fragments/sidebar :: sidebar('pedidos')}"></aside>
+    <main class="admin-main">
+
+        <!-- TOPBAR -->
+        <header class="admin-topbar">
+            <div>
+                <p class="eyebrow"><i class="bi bi-bag-check-fill"></i> Gestão de vendas</p>
+                <h1>Lista de pedidos</h1>
+                <p>Acompanhe o status e o andamento de todos os pedidos.</p>
+            </div>
+            <a class="button button-ghost" href="/admin/dashboard">
+                <i class="bi bi-bar-chart-line"></i> Ver dashboard
+            </a>
+        </header>
+
+        <!-- MENSAGENS FLASH -->
+        <div th:if="${mensagemSucesso}" class="inline-notice" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <p th:text="${mensagemSucesso}">Operação realizada com sucesso.</p>
+        </div>
+        <div th:if="${erro}" class="inline-notice return-notice" role="alert"
+             style="margin-bottom: 18px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <p th:text="${erro}">Ocorreu um erro.</p>
+        </div>
+
+        <!-- KPIs -->
+        <section class="admin-kpi-grid order-kpis" aria-label="Indicadores de pedidos">
+            <article class="admin-kpi">
+                <i class="bi bi-bag-check-fill green"></i>
+                <div>
+                    <span>Pedidos hoje</span>
+                    <strong th:text="${pedidosHoje != null ? pedidosHoje : 0}">0</strong>
+                </div>
+            </article>
+            <article class="admin-kpi">
+                <i class="bi bi-truck blue"></i>
+                <div>
+                    <span>Em transporte</span>
+                    <strong th:text="${emTransporte != null ? emTransporte : 0}">0</strong>
+                </div>
+            </article>
+            <article class="admin-kpi">
+                <i class="bi bi-arrow-repeat red"></i>
+                <div>
+                    <span>Trocas pendentes</span>
+                    <strong th:text="${trocasPendentes != null ? trocasPendentes : 0}">0</strong>
+                </div>
+            </article>
+        </section>
+
+        <!-- PAINEL -->
+        <section class="panel admin-table-panel">
+
+            <form class="table-toolbar orders-toolbar"
+                  method="get"
+                  th:action="@{/admin/pedidos}">
+
+                <label class="admin-search">
+                    <i class="bi bi-search"></i>
+                    <input type="search"
+                           name="busca"
+                           th:value="${busca}"
+                           placeholder="Buscar por pedido, cliente ou e-mail">
+                </label>
+
+                <select name="status" aria-label="Filtrar pedidos por status">
+                    <option value="" th:selected="${statusSelecionado == null}">Todos os status</option>
+                    <option th:each="s : ${statusDisponiveis}"
+                            th:value="${s}"
+                            th:text="${s.descricao}"
+                            th:selected="${statusSelecionado != null and statusSelecionado == s}">
+                        Status
+                    </option>
+                </select>
+
+                <button type="submit" class="button button-primary">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+
+                <a th:if="${(busca != null and !busca.isBlank()) or statusSelecionado != null}"
+                   th:href="@{/admin/pedidos}"
+                   class="button button-ghost">
+                    <i class="bi bi-x-circle"></i> Limpar
+                </a>
+            </form>
+
+            <div class="table-scroll">
+                <table class="admin-table orders-table">
+                    <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Itens</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th aria-label="Ações"></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <!-- Estado vazio -->
+                    <tr th:if="${pedidos == null or #lists.isEmpty(pedidos)}">
+                        <td colspan="7"
+                            style="text-align:center; padding:2.5rem 1rem; color:#70847b;">
+                            <i class="bi bi-inbox"
+                               style="display:block; margin-bottom:.6rem; color:#b8c9bd; font-size:2rem;"></i>
+                            <p style="margin:0; font-size:.85rem;">Nenhum pedido encontrado.</p>
+                        </td>
+                    </tr>
+
+                    <!-- Linhas -->
+                    <tr th:each="pedido : ${pedidos}">
+
+                        <!-- Pedido -->
+                        <td>
+                            <strong th:text="${'#BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">
+                                #BN-2026-000
+                            </strong>
+
+                            <small th:if="${pedido.pagamento != null and pedido.pagamento.status != null}"
+                                   th:text="${'Pagamento ' + #strings.toLowerCase(pedido.pagamento.status.name())}">
+                                Pagamento pendente
+                            </small>
+                            <small th:if="${pedido.pagamento == null or pedido.pagamento.status == null}">
+                                Pagamento pendente
+                            </small>
+                        </td>
+
+                        <!-- Cliente -->
+                        <td>
+                            <div class="person-cell">
+                                <span class="table-avatar"
+                                      th:text="${#strings.toUpperCase(#strings.substring(pedido.cliente.nome, 0, 2))}">
+                                    MC
+                                </span>
+                                <span>
+                                    <strong th:text="${pedido.cliente.nome}">Cliente</strong>
+                                    <small th:text="${pedido.cliente.email}">email@email.com</small>
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Data -->
+                        <td th:text="${pedido.dataCriacao != null
+                                        ? #temporals.format(pedido.dataCriacao, 'dd MMM. yyyy')
+                                        : '-'}">
+                            01 jan. 2026
+                        </td>
+
+                        <!-- Itens -->
+                        <td th:text="${pedido.quantidadeTotalItens}">0</td>
+
+                        <!-- Total -->
+                        <td>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}">
+                                R$ 0,00
+                            </strong>
+                        </td>
+
+                        <!-- Status: switch por nome do enum (sem T()) -->
+                        <td>
+                            <span th:switch="${pedido.status != null ? pedido.status.name() : ''}">
+
+                                <span th:case="'EM_PROCESSAMENTO'" class="admin-status processing">
+                                    <i class="bi bi-hourglass-split"></i> Em processamento
+                                </span>
+
+                                <span th:case="'APROVADO'" class="admin-status active">
+                                    <i class="bi bi-check-circle-fill"></i> Aprovado
+                                </span>
+
+                                <span th:case="'EM_TRANSPORTE'" class="admin-status warning">
+                                    <i class="bi bi-truck"></i> Em transporte
+                                </span>
+
+                                <span th:case="'ENTREGUE'" class="admin-status active">
+                                    <i class="bi bi-check-circle-fill"></i> Entregue
+                                </span>
+
+                                <span th:case="'EM_TROCA'" class="admin-status warning">
+                                    <i class="bi bi-arrow-repeat"></i> Em troca
+                                </span>
+
+                                <span th:case="'TROCA_AUTORIZADA'" class="admin-status authorized">
+                                    <i class="bi bi-check2-circle"></i> Troca autorizada
+                                </span>
+
+                                <span th:case="'TROCA_RECUSADA'" class="admin-status inactive">
+                                    <i class="bi bi-x-octagon-fill"></i> Troca recusada
+                                </span>
+
+                                <span th:case="'CANCELADO'" class="admin-status inactive">
+                                    <i class="bi bi-x-circle-fill"></i> Cancelado
+                                </span>
+
+                                <span th:case="*" class="admin-status">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span th:text="${pedido.status}">Status</span>
+                                </span>
+                            </span>
+                        </td>
+
+                        <!-- Ações -->
+                        <td>
+                            <div class="row-actions">
+                                <a th:href="@{/admin/pedidos/{id}(id=${pedido.id})}"
+                                   th:title="${'Ver detalhes do pedido #' + pedido.id}">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINAÇÃO -->
+            <footer class="table-footer" th:if="${totalElementos != null and totalElementos > 0}">
+                <span th:text="${'Exibindo ' + #lists.size(pedidos) + ' de ' + totalElementos + ' pedidos'}">
+                    Exibindo 0 de 0 pedidos
+                </span>
+
+                <div th:if="${totalPaginas != null and totalPaginas > 1}">
+
+                    <a th:if="${paginaAtual > 0}"
+                       th:href="@{/admin/pedidos(page=${paginaAtual - 1}, status=${statusSelecionado}, busca=${busca})}">
+                        <button type="button"><i class="bi bi-chevron-left"></i></button>
+                    </a>
+                    <button type="button" disabled th:if="${paginaAtual == 0}">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    <a th:each="i : ${#numbers.sequence(0, totalPaginas - 1)}"
+                       th:href="@{/admin/pedidos(page=${i}, status=${statusSelecionado}, busca=${busca})}">
+                        <button type="button"
+                                th:classappend="${i == paginaAtual} ? 'current'"
+                                th:text="${i + 1}">1</button>
+                    </a>
+
+                    <a th:if="${paginaAtual < totalPaginas - 1}"
+                       th:href="@{/admin/pedidos(page=${paginaAtual + 1}, status=${statusSelecionado}, busca=${busca})}">
+                        <button type="button"><i class="bi bi-chevron-right"></i></button>
+                    </a>
+                    <button type="button" disabled th:if="${paginaAtual >= totalPaginas - 1}">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </footer>
+        </section>
+    </main>
+</div>
+</body>
+</html>

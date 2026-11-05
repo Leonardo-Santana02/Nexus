@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da devolução | BookNexus</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/prototype.css">
+</head>
+
+<body>
+<div class="admin-layout">
+
+    <aside th:replace="~{admin/fragments/sidebar :: sidebar('devolucoes')}"></aside>
+
+    <main class="admin-main">
+
+        <!-- ============================================================
+             BREADCRUMB
+             ============================================================ -->
+        <nav class="admin-breadcrumb" aria-label="Caminho de navegação">
+            <a th:href="@{/admin/devolucoes}">Devoluções</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>
+                Solicitação #TR-<span th:text="${#numbers.formatInteger(devolucao.id, 4)}">0000</span>
+            </span>
+        </nav>
+
+        <!-- ============================================================
+             TOPBAR
+             ============================================================ -->
+        <header class="admin-topbar return-detail-header">
+            <div>
+                <p class="eyebrow">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Pós-venda
+                </p>
+
+                <h1>Detalhes da devolução</h1>
+
+                <p>
+                    Solicitação #TR-<span th:text="${#numbers.formatInteger(devolucao.id, 4)}">0000</span>
+                    &middot; aberta em
+                    <span th:text="${#temporals.format(devolucao.dataSolicitacao, 'dd/MM/yyyy')}">01/01/2026</span>,
+                    às
+                    <span th:text="${#temporals.format(devolucao.dataSolicitacao, 'HH:mm')}">00:00</span>.
+                </p>
+            </div>
+
+            <div class="admin-order-head-actions">
+
+                <!-- Badge do status atual (lido do pedido) -->
+                <span th:switch="${pedido.status.name()}">
+
+                    <span th:case="'EM_TROCA'" class="admin-status processing">
+                        <i class="bi bi-hourglass-split"></i>
+                        Em análise
+                    </span>
+
+                    <span th:case="'TROCA_AUTORIZADA'" class="admin-status authorized">
+                        <i class="bi bi-check2-circle"></i>
+                        Troca autorizada
+                    </span>
+
+                    <span th:case="'EM_TRANSPORTE'" class="admin-status warning">
+                        <i class="bi bi-truck"></i>
+                        Em transporte
+                    </span>
+
+                    <span th:case="'ENTREGUE'" class="admin-status active">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Troca concluída
+                    </span>
+
+                    <span th:case="'TROCA_RECUSADA'" class="admin-status inactive">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Troca recusada
+                    </span>
+
+                    <span th:case="*" class="admin-status">
+                        <i class="bi bi-question-circle"></i>
+                        <span th:text="${pedido.status.descricao}">Status</span>
+                    </span>
+
+                </span>
+
+                <a class="button button-ghost" th:href="@{/admin/devolucoes}">
+                    <i class="bi bi-arrow-left"></i>
+                    Voltar à listagem
+                </a>
+            </div>
+        </header>
+
+        <!-- ============================================================
+             MENSAGENS FLASH
+             ============================================================ -->
+        <div th:if="${mensagemSucesso}" class="inline-notice"
+             role="alert" style="margin-bottom: 18px;">
+            <i class="bi bi-check-circle-fill"></i>
+            <p th:text="${mensagemSucesso}">Operação realizada com sucesso.</p>
+        </div>
+
+        <div th:if="${erro}" class="inline-notice return-notice"
+             role="alert" style="margin-bottom: 18px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <p th:text="${erro}">Ocorreu um erro.</p>
+        </div>
+
+        <section class="return-admin-layout">
+
+            <!-- ============================================================
+                 COLUNA PRINCIPAL
+                 ============================================================ -->
+            <section class="checkout-content">
+
+                <!-- ====================================================
+                     DADOS DA SOLICITAÇÃO
+                     ==================================================== -->
+                <article class="panel return-request-card">
+
+                    <div class="request-head">
+                        <div>
+                            <p class="eyebrow">
+                                Pedido #
+                                <span th:text="${'BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">BN-2026-000</span>
+                            </p>
+
+                            <h2 th:text="${'Troca solicitada por ' + devolucao.cliente.nome}">
+                                Troca solicitada por Cliente
+                            </h2>
+
+                            <p th:if="${devolucao.itens != null and devolucao.itens.size() == 1}">
+                                O cliente selecionou 1 item do pedido entregue para troca.
+                            </p>
+                            <p th:if="${devolucao.itens != null and devolucao.itens.size() > 1}"
+                               th:text="${'O cliente selecionou ' + devolucao.itens.size() + ' itens do pedido entregue para troca.'}">
+                                O cliente selecionou vários itens para troca.
+                            </p>
+                        </div>
+
+                        <span th:switch="${pedido.status.name()}">
+                            <span th:case="'EM_TROCA'" class="admin-status processing">
+                                <i class="bi bi-hourglass-split"></i> Em análise
+                            </span>
+                            <span th:case="'TROCA_AUTORIZADA'" class="admin-status authorized">
+                                <i class="bi bi-check2-circle"></i> Troca autorizada
+                            </span>
+                            <span th:case="'EM_TRANSPORTE'" class="admin-status warning">
+                                <i class="bi bi-truck"></i> Em transporte
+                            </span>
+                            <span th:case="'ENTREGUE'" class="admin-status active">
+                                <i class="bi bi-check-circle-fill"></i> Troca concluída
+                            </span>
+                            <span th:case="'TROCA_RECUSADA'" class="admin-status inactive">
+                                <i class="bi bi-x-circle-fill"></i> Troca recusada
+                            </span>
+                            <span th:case="*" class="admin-status">
+                                <i class="bi bi-question-circle"></i>
+                                <span th:text="${pedido.status.descricao}">Status</span>
+                            </span>
+                        </span>
+                    </div>
+
+                    <!-- Cliente -->
+                    <div class="request-customer">
+                        <span class="table-avatar"
+                              th:text="${#strings.toUpperCase(#strings.substring(devolucao.cliente.nome, 0, 2))}">
+                            CL
+                        </span>
+
+                        <span>
+                            <strong th:text="${devolucao.cliente.nome}">Cliente</strong>
+                            <small th:text="${devolucao.cliente.email}">email@email.com</small>
+                        </span>
+
+                        <a class="plain-link"
+                           th:href="@{/admin/clientes/{id}(id=${devolucao.cliente.id})}">
+                            Ver cliente
+                        </a>
+                    </div>
+
+                    <!-- Itens da devolução -->
+                    <div th:each="item : ${devolucao.itens}"
+                         class="return-book-admin"
+                         style="margin-top: 1rem;">
+
+                        <span class="mini-cover cover-sage">
+                            <b th:text="${item.itemPedido.produto.titulo}">Título</b>
+                        </span>
+
+                        <div>
+                            <span class="book-tag"
+                                  th:if="${item.itemPedido.produto.genero != null}"
+                                  th:text="${item.itemPedido.produto.genero}">
+                                Gênero
+                            </span>
+
+                            <h3 th:text="${item.itemPedido.produto.titulo}">Título</h3>
+
+                            <p>
+                                <span th:text="${item.itemPedido.produto.autor}">Autor</span>
+                                &middot; ISBN
+                                <span th:text="${item.itemPedido.produto.isbn}">000-00-0000-000-0</span>
+                                &middot;
+                                <span th:text="${item.quantidade}">0</span>
+                                <span th:text="${item.quantidade == 1 ? 'unidade' : 'unidades'}">unidade</span>
+                            </p>
+                        </div>
+
+                        <b th:text="${'R$ ' + #numbers.formatDecimal(item.valorTotal, 1, 'POINT', 2, 'COMMA')}">
+                            R$ 0,00
+                        </b>
+                    </div>
+
+                    <!-- Motivo -->
+                    <div class="reason-box">
+                        <span>
+                            <i class="bi bi-chat-left-text-fill"></i>
+                            Motivo informado pelo cliente
+                        </span>
+
+                        <p>
+                            <strong th:text="${devolucao.motivo.descricao}">Motivo</strong>
+                            <span th:if="${devolucao.justificativa != null and !devolucao.justificativa.isBlank()}"
+                                  th:text="${' - ' + devolucao.justificativa}">
+                                - Justificativa
+                            </span>
+                        </p>
+                    </div>
+
+                </article>
+
+                <!-- ====================================================
+                     DADOS DO PEDIDO E ENTREGA
+                     ==================================================== -->
+                <article class="panel return-shipping-details">
+
+                    <div class="panel-title">
+                        <div>
+                            <h2>Dados do pedido e entrega</h2>
+                            <p>Informações que ajudam na análise da solicitação.</p>
+                        </div>
+
+                        <i class="bi bi-truck panel-heading-icon"></i>
+                    </div>
+
+                    <div class="return-detail-info-grid">
+
+                        <div>
+                            <span>Pedido original</span>
+                            <strong>
+                                #<span th:text="${'BN-' + #temporals.format(pedido.dataCriacao, 'yyyy') + '-' + #numbers.formatInteger(pedido.id, 3)}">BN-2026-000</span>
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Data da compra</span>
+                            <strong th:text="${#temporals.format(pedido.dataCriacao, 'dd/MM/yyyy')}">
+                                01/01/2026
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Valor total do pedido</span>
+                            <strong th:text="${'R$ ' + #numbers.formatDecimal(pedido.valorTotal, 1, 'POINT', 2, 'COMMA')}">
+                                R$ 0,00
+                            </strong>
+                        </div>
+
+                        <div th:if="${pedido.enderecoEntrega != null}">
+                            <span>Endereço de entrega</span>
+                            <strong>
+                                <span th:text="${pedido.enderecoEntrega.cidade}">Cidade</span>,
+                                <span th:text="${pedido.enderecoEntrega.uf}">UF</span>
+                                &middot;
+                                <span th:text="${pedido.enderecoEntrega.cep}">00000-000</span>
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </article>
+
+                <!-- ====================================================
+                     DECISÃO ADMINISTRATIVA (CONDICIONAL POR STATUS)
+                     ==================================================== -->
+                <article class="panel decision-card">
+
+                    <div>
+                        <h2>Decisão administrativa</h2>
+                        <p>Analise a solicitação e controle o andamento da devolução.</p>
+                    </div>
+
+                    <!-- ================================================
+                         CASO 1: EM_TROCA — Autorizar ou Recusar
+                         ================================================ -->
+                    <div th:if="${pedido.status.name() == 'EM_TROCA'}">
+
+                        <p class="eyebrow">Decisão da solicitação</p>
+
+                        <div class="decision-options">
+
+                            <!-- Autorizar -->
+                            <form th:action="@{/admin/devolucoes/{id}/autorizar(id=${devolucao.id})}"
+                                  method="post"
+                                  style="display: contents;">
+                                <input type="hidden" name="valorAprovado"
+                                       th:value="${devolucao.valorSolicitado}">
+                                <button type="submit">
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>
+                                        <strong>Autorizar troca</strong>
+                                        <small>Gerar instruções de retorno ao cliente</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                            <!-- Recusar -->
+                            <form th:action="@{/admin/devolucoes/{id}/recusar(id=${devolucao.id})}"
+                                  method="post"
+                                  style="display: contents;"
+                                  onsubmit="return confirm('Confirma a recusa desta solicitação?');">
+                                <input type="hidden" name="observacao"
+                                       value="Solicitação recusada pelo administrador.">
+                                <button type="submit">
+                                    <i class="bi bi-x-circle"></i>
+                                    <span>
+                                        <strong>Recusar solicitação</strong>
+                                        <small>Informar motivo da recusa</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <!-- ================================================
+                         CASO 2: TROCA_AUTORIZADA — Despachar para troca
+                         ================================================ -->
+                    <div th:if="${pedido.status.name() == 'TROCA_AUTORIZADA'}">
+
+                        <p class="eyebrow">Próxima etapa</p>
+
+                        <div class="decision-options">
+
+                            <form th:action="@{/admin/devolucoes/{id}/avancar(id=${devolucao.id})}"
+                                  method="post"
+                                  style="display: contents;">
+                                <input type="hidden" name="novoStatus" value="EM_TRANSPORTE">
+                                <button type="submit">
+                                    <i class="bi bi-send-check"></i>
+                                    <span>
+                                        <strong>Despachar para troca</strong>
+                                        <small>Registrar que o cliente enviou o item de volta</small>
+                                    </span>
+                                </button>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <!-- ================================================
+                         CASO 3: EM_TRANSPORTE — Confirmar recebimento
+                         ================================================ -->
+                    <div th:if="${pedido.status.name() == 'EM_TRANSPORTE'}">
+
+                        <p class="eyebrow">Confirmar recebimento</p>
+
+                        <form th:action="@{/admin/devolucoes/{id}/receber(id=${devolucao.id})}"
+                              method="post">
+
+                            <p style="margin: 0 0 1rem; color: var(--ink-700); font-size: 0.85rem;">
+                                Informe, para cada item, se ele deve retornar ao estoque.
+                                Ao confirmar, o cupom de troca será gerado e a devolução será concluída.
+                            </p>
+
+                            <div class="decision-options">
+
+                                <div th:each="item : ${devolucao.itens}"
+                                     style="display: flex; align-items: center; gap: 1rem;
+                                            padding: 0.85rem; border: 1px solid var(--line);
+                                            border-radius: 10px; margin-bottom: 0.5rem;">
+
+                                    <span class="mini-cover cover-sage"
+                                          style="width: 44px; height: 60px; flex-shrink: 0;">
+                                        <b th:text="${item.itemPedido.produto.titulo}"
+                                           style="font-size: 0.6rem;">Título</b>
+                                    </span>
+
+                                    <span style="flex: 1;">
+                                        <strong th:text="${item.itemPedido.produto.titulo}">Título</strong>
+                                        <small style="display: block; margin-top: 0.25rem; color: var(--ink-500);">
+                                            <span th:text="${item.quantidade}">0</span>
+                                            <span th:text="${item.quantidade == 1 ? 'unidade' : 'unidades'}">unidade</span>
+                                            &middot; R$
+                                            <span th:text="${#numbers.formatDecimal(item.valorTotal, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                                        </small>
+                                    </span>
+
+                                    <label style="display: inline-flex; align-items: center; gap: 0.5rem;
+                                                  cursor: pointer; font-size: 0.82rem; color: var(--ink-700);">
+                                        <input type="checkbox"
+                                               th:name="${'devolverAoEstoque[' + item.id + ']'}"
+                                               value="true"
+                                               checked>
+                                        Devolver ao estoque
+                                    </label>
+                                </div>
+
+                            </div>
+
+                            <div class="decision-footer" style="margin-top: 1rem;">
+                                <button type="submit" class="button button-primary">
+                                    <i class="bi bi-box-seam"></i>
+                                    Confirmar recebimento e gerar cupom
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                    <!-- ================================================
+                         CASO 4: ENTREGUE — Troca concluída
+                         ================================================ -->
+                    <div th:if="${pedido.status.name() == 'ENTREGUE'}">
+
+                        <p class="eyebrow">Situação</p>
+
+                        <div class="inline-notice" style="margin: 0;">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <p>
+                                <strong>Troca concluída.</strong>
+                                A devolução foi finalizada e o cupom de troca já foi gerado.
+                                <span th:if="${devolucao.cupomGerado != null}">
+                                    Código do cupom:
+                                    <strong th:text="${devolucao.cupomGerado.codigo}">TROCA-XXXX</strong>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- ================================================
+                         CASO 5: TROCA_RECUSADA — Encerrada
+                         ================================================ -->
+                    <div th:if="${pedido.status.name() == 'TROCA_RECUSADA'}">
+
+                        <p class="eyebrow">Situação</p>
+
+                        <div class="inline-notice return-notice" style="margin: 0;">
+                            <i class="bi bi-x-circle-fill"></i>
+                            <p>
+                                <strong>Troca recusada.</strong>
+                                A solicitação foi encerrada.
+                                <span th:if="${devolucao.observacaoAdmin != null and !devolucao.observacaoAdmin.isBlank()}"
+                                      th:text="${' Motivo: ' + devolucao.observacaoAdmin}">
+                                    Motivo: ...
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                </article>
+
+            </section>
+
+            <!-- ============================================================
+                 ASIDE — RESUMO
+                 ============================================================ -->
+            <aside class="return-admin-side">
+
+                <h2>Resumo da devolução</h2>
+
+                <div>
+                    <span>Valor solicitado</span>
+                    <strong th:text="${'R$ ' + #numbers.formatDecimal(devolucao.valorSolicitado, 1, 'POINT', 2, 'COMMA')}">
+                        R$ 0,00
+                    </strong>
+                </div>
+
+                <div th:if="${devolucao.valorAprovado != null}">
+                    <span>Valor aprovado</span>
+                    <strong th:text="${'R$ ' + #numbers.formatDecimal(devolucao.valorAprovado, 1, 'POINT', 2, 'COMMA')}">
+                        R$ 0,00
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Tipo de solicitação</span>
+                    <strong>Troca</strong>
+                </div>
+
+                <div>
+                    <span>Data da solicitação</span>
+                    <strong th:text="${#temporals.format(devolucao.dataSolicitacao, 'dd MMM. yyyy')}">
+                        01 jan. 2026
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Status atual</span>
+                    <strong th:text="${pedido.status.descricao}">Status</strong>
+                </div>
+
+                <div th:if="${devolucao.cupomGerado != null}">
+                    <span>Cupom gerado</span>
+                    <strong th:text="${devolucao.cupomGerado.codigo}">TROCA-XXXX</strong>
+                </div>
+
+                <!-- Timeline -->
+                <div class="return-timeline-mini">
+
+                    <span class="done">
+                        <i class="bi bi-check-lg"></i>
+                    </span>
+                    <p>
+                        <strong>Solicitação recebida</strong>
+                        <small th:text="${#temporals.format(devolucao.dataSolicitacao, 'dd MMM. HH:mm')}">
+                            01 jan. 00:00
+                        </small>
+                    </p>
+
+                    <!-- Autorizada -->
+                    <span th:classappend="${devolucao.dataAutorizacao != null} ? 'done'">
+                        <i class="bi bi-check-lg" th:if="${devolucao.dataAutorizacao != null}"></i>
+                    </span>
+                    <p>
+                        <strong>Análise administrativa</strong>
+                        <small th:if="${devolucao.dataAutorizacao != null}"
+                               th:text="${'Autorizada em ' + #temporals.format(devolucao.dataAutorizacao, 'dd MMM. HH:mm')}">
+                            Autorizada
+                        </small>
+                        <small th:if="${devolucao.dataAutorizacao == null}">
+                            Aguardando decisão
+                        </small>
+                    </p>
+
+                    <!-- Recebida -->
+                    <span th:classappend="${devolucao.dataRecebimento != null} ? 'done'">
+                        <i class="bi bi-check-lg" th:if="${devolucao.dataRecebimento != null}"></i>
+                    </span>
+                    <p>
+                        <strong>Retorno do item</strong>
+                        <small th:if="${devolucao.dataRecebimento != null}"
+                               th:text="${'Recebido em ' + #temporals.format(devolucao.dataRecebimento, 'dd MMM. HH:mm')}">
+                            Recebido
+                        </small>
+                        <small th:if="${devolucao.dataRecebimento == null}">
+                            Aguardando recebimento
+                        </small>
+                    </p>
+
+                    <!-- Cupom -->
+                    <span th:classappend="${devolucao.cupomGerado != null} ? 'done'">
+                        <i class="bi bi-check-lg" th:if="${devolucao.cupomGerado != null}"></i>
+                    </span>
+                    <p>
+                        <strong>Cupom de troca</strong>
+                        <small th:if="${devolucao.cupomGerado != null}"
+                               th:text="${devolucao.cupomGerado.codigo}">
+                            TROCA-XXXX
+                        </small>
+                        <small th:if="${devolucao.cupomGerado == null}">
+                            Gerado após recebimento
+                        </small>
+                    </p>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+    </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,3596 @@
+<html>
+<!DOCTYPE html>
+
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0">
+
+    <title
+            th:text="${cliente != null
+                    ? 'Editar ' + cliente.nome + ' | BookNexus'
+                    : 'Editar cliente | BookNexus'}">
+
+        Editar cliente | BookNexus
+
+    </title>
+
+
+    <link
+            rel="preconnect"
+            href="https://cdn.jsdelivr.net">
+
+
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/prototype.css}">
+
+
+    <!-- ========================================================= -->
+    <!-- AJUSTES EXCLUSIVOS DA EDIÇÃO -->
+    <!-- ========================================================= -->
+
+    <style>
+
+        /*
+         * ========================================================
+         * MODAL DE VALIDAÇÃO
+         * ========================================================
+         */
+
+        .validation-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 24px;
+
+            background: rgba(15, 23, 42, 0.48);
+            backdrop-filter: blur(3px);
+
+            opacity: 0;
+            visibility: hidden;
+
+            transition:
+                    opacity 0.2s ease,
+                    visibility 0.2s ease;
+        }
+
+
+        .validation-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        .validation-modal {
+            width: 100%;
+            max-width: 440px;
+
+            background: #ffffff;
+
+            border-radius: 18px;
+
+            box-shadow:
+                    0 24px 60px rgba(15, 23, 42, 0.22);
+
+            overflow: hidden;
+
+            transform: translateY(12px) scale(0.98);
+
+            transition:
+                    transform 0.2s ease;
+        }
+
+
+        .validation-modal-overlay.active
+        .validation-modal {
+            transform: translateY(0) scale(1);
+        }
+
+
+        .validation-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+
+            padding: 22px 24px 16px;
+        }
+
+
+        .validation-modal-icon {
+            width: 46px;
+            height: 46px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #fee2e2;
+            color: #dc2626;
+
+            font-size: 22px;
+        }
+
+
+        .validation-modal-title {
+            margin: 0;
+
+            color: #172033;
+
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+
+        .validation-modal-body {
+            padding: 0 24px 22px;
+        }
+
+
+        .validation-modal-message {
+            margin: 0;
+
+            color: #5f6b7a;
+
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+
+        .validation-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+
+            padding: 16px 24px 22px;
+
+            border-top: 1px solid #edf0f4;
+        }
+
+
+        .validation-modal-confirm {
+            min-width: 110px;
+
+            border: none;
+            border-radius: 10px;
+
+            padding: 11px 20px;
+
+            background: #2f6f57;
+            color: #ffffff;
+
+            font: inherit;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                    background 0.2s ease,
+                    transform 0.1s ease;
+        }
+
+
+        .validation-modal-confirm:hover {
+            background: #275e4a;
+        }
+
+
+        .validation-modal-confirm:active {
+            transform: scale(0.98);
+        }
+
+
+        .campo-com-erro {
+            border-color: #dc2626 !important;
+
+            box-shadow:
+                    0 0 0 3px rgba(220, 38, 38, 0.10) !important;
+        }
+
+
+        /*
+         * ========================================================
+         * ESPAÇAMENTO ENTRE BLOCOS DINÂMICOS
+         * ========================================================
+         */
+
+        .endereco-item + .endereco-item,
+        .telefone-item + .telefone-item,
+        .cartao-item + .cartao-item {
+            margin-top: 24px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="admin-layout">
+
+
+    <!-- ========================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================================================= -->
+
+    <aside
+            th:replace="~{admin/fragments/sidebar :: sidebar('clientes')}">
+    </aside>
+
+
+    <main class="admin-main">
+
+
+        <!-- ===================================================== -->
+        <!-- BREADCRUMB -->
+        <!-- ===================================================== -->
+
+        <nav class="admin-breadcrumb">
+
+            <a th:href="@{/admin/clientes}">
+                Clientes
+            </a>
+
+
+            <i class="bi bi-chevron-right"></i>
+
+
+            <a
+                    th:href="@{/admin/clientes/{id}(id=${cliente.id})}"
+                    th:text="${cliente.nome}">
+
+                Cliente
+
+            </a>
+
+
+            <i class="bi bi-chevron-right"></i>
+
+
+            <span>
+                Editar
+            </span>
+
+        </nav>
+
+
+        <!-- ===================================================== -->
+        <!-- CABEÇALHO -->
+        <!-- ===================================================== -->
+
+        <header class="admin-topbar form-topbar">
+
+            <div>
+
+                <p class="eyebrow">
+
+                    <i class="bi bi-pencil-square"></i>
+
+                    Gestão de clientes
+
+                </p>
+
+
+                <h1>
+                    Editar cliente
+                </h1>
+
+
+                <p>
+
+                    Atualize os dados de
+
+                    <strong th:text="${cliente.nome}">
+                        Cliente
+                    </strong>.
+
+                </p>
+
+            </div>
+
+
+            <!-- ATIVO -->
+            <span
+                    th:if="${!cliente.inativado}"
+                    class="admin-status active">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                Ativo
+
+            </span>
+
+
+            <!-- INATIVO -->
+            <span
+                    th:if="${cliente.inativado}"
+                    class="admin-status inactive">
+
+                <i class="bi bi-pause-circle-fill"></i>
+
+                Inativo
+
+            </span>
+
+        </header>
+
+
+        <!-- ===================================================== -->
+        <!-- FORMULÁRIO -->
+        <!-- ===================================================== -->
+
+        <form
+                class="prototype-form"
+                th:action="@{/admin/clientes/{id}/editar(id=${cliente.id})}"
+                th:object="${cliente}"
+                method="post"
+                novalidate>
+
+
+            <!-- ID DO CLIENTE -->
+            <input
+                    type="hidden"
+                    th:field="*{id}">
+
+
+            <!-- ================================================= -->
+            <!-- DADOS PESSOAIS -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="form-section-title">
+
+                    <span class="form-section-icon">
+
+                        <i class="bi bi-person-vcard-fill"></i>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2>
+                            Dados pessoais
+                        </h2>
+
+
+                        <p>
+                            Informações principais de identificação e contato.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid three">
+
+
+                    <!-- NOME -->
+                    <label>
+
+                        Nome completo
+
+                        <input
+                                type="text"
+                                th:field="*{nome}"
+                                placeholder="Nome completo"
+                                maxlength="150"
+                                required>
+
+
+                        <small
+                                th:if="${#fields.hasErrors('nome')}"
+                                th:errors="*{nome}">
+                        </small>
+
+                    </label>
+
+
+                    <!-- DATA DE NASCIMENTO -->
+                    <label>
+
+                        Data de nascimento
+
+                        <input
+                                type="date"
+                                th:field="*{dataNascimento}"
+                                required>
+
+
+                        <small
+                                th:if="${#fields.hasErrors('dataNascimento')}"
+                                th:errors="*{dataNascimento}">
+                        </small>
+
+                    </label>
+
+
+                    <!-- GÊNERO -->
+                    <label>
+
+                        Gênero
+
+                        <select
+                                th:field="*{genero}"
+                                required>
+
+                            <option value="">
+                                Selecione
+                            </option>
+
+
+                            <option
+                                    th:each="generoOpcao : ${generos}"
+                                    th:value="${generoOpcao}"
+                                    th:text="${generoOpcao.descricao}">
+                            </option>
+
+                        </select>
+
+
+                        <small
+                                th:if="${#fields.hasErrors('genero')}"
+                                th:errors="*{genero}">
+                        </small>
+
+                    </label>
+
+
+                    <!-- CPF -->
+                    <label>
+
+                        CPF
+
+                        <input
+                                type="text"
+                                th:field="*{cpf}"
+                                id="cpf"
+                                placeholder="000.000.000-00"
+                                maxlength="14"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                required>
+
+
+                        <small
+                                th:if="${#fields.hasErrors('cpf')}"
+                                th:errors="*{cpf}">
+                        </small>
+
+                    </label>
+
+
+                    <!-- E-MAIL -->
+                    <label>
+
+                        E-mail
+
+                        <input
+                                type="email"
+                                th:field="*{email}"
+                                placeholder="cliente@email.com"
+                                maxlength="100"
+                                autocomplete="email"
+                                required>
+
+
+                        <small
+                                th:if="${#fields.hasErrors('email')}"
+                                th:errors="*{email}">
+                        </small>
+
+                    </label>
+
+
+                    <!-- STATUS -->
+                    <label>
+
+                        Status
+
+                        <select th:field="*{inativado}">
+
+                            <option value="false">
+                                Ativo
+                            </option>
+
+                            <option value="true">
+                                Inativo
+                            </option>
+
+                        </select>
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- ENDEREÇOS -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="form-section-title">
+
+                    <span class="form-section-icon">
+
+                        <i class="bi bi-geo-alt-fill"></i>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2>
+                            Endereços
+                        </h2>
+
+
+                        <p>
+                            Atualize os endereços de entrega e cobrança do cliente.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div id="enderecos-container">
+
+
+                    <div
+                            class="credit-card-form endereco-item"
+                            th:each="endereco, enderecoStatus : *{enderecos}"
+                            th:attr="data-index=${enderecoStatus.index}">
+
+
+                        <!-- ID EXISTENTE -->
+                        <input
+                                type="hidden"
+                                th:field="*{enderecos[__${enderecoStatus.index}__].id}">
+
+
+                        <div class="credit-card-form-head">
+
+                            <strong
+                                    class="endereco-titulo"
+                                    th:text="'Endereço ' + ${enderecoStatus.index + 1}">
+
+                                Endereço 1
+
+                            </strong>
+
+
+                            <div>
+
+                                <label>
+
+                                    <input
+                                            type="checkbox"
+                                            class="endereco-entrega"
+                                            th:field="*{enderecos[__${enderecoStatus.index}__].enderecoEntrega}">
+
+                                    Endereço de entrega
+
+                                </label>
+
+
+                                <label>
+
+                                    <input
+                                            type="checkbox"
+                                            class="endereco-cobranca"
+                                            th:field="*{enderecos[__${enderecoStatus.index}__].enderecoCobranca}">
+
+                                    Endereço de cobrança
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="form-grid three">
+
+
+                            <!-- IDENTIFICAÇÃO -->
+                            <label>
+
+                                Identificação
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].apelido}"
+                                        maxlength="50"
+                                        placeholder="Ex.: Casa, Trabalho">
+
+                            </label>
+
+
+                            <!-- CEP -->
+                            <label>
+
+                                CEP
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].cep}"
+                                        class="campo-cep"
+                                        placeholder="00000-000"
+                                        maxlength="9"
+                                        inputmode="numeric"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].cep')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].cep}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- TIPO DE LOGRADOURO -->
+                            <label>
+
+                                Tipo de logradouro
+
+                                <select
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].tipoLogradouro}"
+                                        required>
+
+                                    <option value="">
+                                        Selecione
+                                    </option>
+
+
+                                    <option
+                                            th:each="tipo : ${tiposLogradouro}"
+                                            th:value="${tipo}"
+                                            th:text="${tipo.descricao}">
+                                    </option>
+
+                                </select>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].tipoLogradouro')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].tipoLogradouro}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- LOGRADOURO -->
+                            <label class="span-two">
+
+                                Logradouro
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].logradouro}"
+                                        placeholder="Nome da rua, avenida ou praça"
+                                        maxlength="100"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].logradouro')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].logradouro}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- NÚMERO -->
+                            <label>
+
+                                Número
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].numero}"
+                                        placeholder="000"
+                                        maxlength="20"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].numero')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].numero}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- BAIRRO -->
+                            <label>
+
+                                Bairro
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].bairro}"
+                                        placeholder="Bairro"
+                                        maxlength="50"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].bairro')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].bairro}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- CIDADE -->
+                            <label>
+
+                                Cidade
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].cidade}"
+                                        placeholder="Cidade"
+                                        maxlength="50"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].cidade')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].cidade}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- ESTADO -->
+                            <label>
+
+                                Estado
+
+                                <select
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].uf}"
+                                        required>
+
+                                    <option value="">
+                                        Selecione
+                                    </option>
+
+
+                                    <option
+                                            th:each="uf : ${ufs}"
+                                            th:value="${uf}"
+                                            th:text="${uf.sigla}">
+                                    </option>
+
+                                </select>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].uf')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].uf}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- PAÍS -->
+                            <label>
+
+                                País
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].pais}"
+                                        class="campo-pais"
+                                        placeholder="Brasil"
+                                        maxlength="50"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('enderecos[' + enderecoStatus.index + '].pais')}"
+                                        th:errors="*{enderecos[__${enderecoStatus.index}__].pais}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- COMPLEMENTO -->
+                            <label>
+
+                                Complemento
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].complemento}"
+                                        maxlength="50"
+                                        placeholder="Apartamento, bloco...">
+
+                            </label>
+
+
+                            <!-- OBSERVAÇÕES -->
+                            <label>
+
+                                Observações
+
+                                <input
+                                        type="text"
+                                        th:field="*{enderecos[__${enderecoStatus.index}__].observacoes}"
+                                        maxlength="255"
+                                        placeholder="Ponto de referência...">
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ADICIONAR ENDEREÇO -->
+                <div class="add-card-prototype">
+
+                    <i class="bi bi-plus-circle"></i>
+
+
+                    <span>
+
+                        <strong>
+                            Adicionar outro endereço
+                        </strong>
+
+                        <small>
+                            Inclua outro endereço de entrega ou cobrança.
+                        </small>
+
+                    </span>
+
+
+                    <button
+                            type="button"
+                            class="button button-ghost"
+                            id="adicionar-endereco">
+
+                        Adicionar endereço
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- TELEFONES -->
+            <!-- ================================================= -->
+
+            <section class="form-section phone-section">
+
+                <div class="form-section-title">
+
+                    <span class="form-section-icon">
+
+                        <i class="bi bi-telephone-fill"></i>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2>
+                            Telefones
+                        </h2>
+
+
+                        <p>
+                            Atualize uma ou mais formas de contato do cliente.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div id="telefones-container">
+
+
+                    <div
+                            class="credit-card-form telefone-item"
+                            th:each="telefone, telefoneStatus : *{telefones}"
+                            th:attr="data-index=${telefoneStatus.index}">
+
+
+                        <!-- ID EXISTENTE -->
+                        <input
+                                type="hidden"
+                                th:field="*{telefones[__${telefoneStatus.index}__].id}">
+
+
+                        <div class="credit-card-form-head">
+
+                            <strong
+                                    class="telefone-titulo"
+                                    th:text="'Telefone ' + ${telefoneStatus.index + 1}">
+
+                                Telefone 1
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="form-grid three">
+
+
+                            <!-- TIPO -->
+                            <label>
+
+                                Tipo de telefone
+
+                                <select
+                                        th:field="*{telefones[__${telefoneStatus.index}__].tipo}"
+                                        required>
+
+                                    <option value="">
+                                        Selecione
+                                    </option>
+
+
+                                    <option
+                                            th:each="tipo : ${tiposTelefone}"
+                                            th:value="${tipo}"
+                                            th:text="${tipo.descricao}">
+                                    </option>
+
+                                </select>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('telefones[' + telefoneStatus.index + '].tipo')}"
+                                        th:errors="*{telefones[__${telefoneStatus.index}__].tipo}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- DDD -->
+                            <label>
+
+                                DDD
+
+                                <input
+                                        type="text"
+                                        th:field="*{telefones[__${telefoneStatus.index}__].ddd}"
+                                        class="campo-ddd"
+                                        placeholder="11"
+                                        maxlength="2"
+                                        inputmode="numeric"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('telefones[' + telefoneStatus.index + '].ddd')}"
+                                        th:errors="*{telefones[__${telefoneStatus.index}__].ddd}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- NÚMERO -->
+                            <label>
+
+                                Número
+
+                                <input
+                                        type="text"
+                                        th:field="*{telefones[__${telefoneStatus.index}__].numero}"
+                                        class="campo-telefone"
+                                        placeholder="99999-9999"
+                                        maxlength="10"
+                                        inputmode="numeric"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('telefones[' + telefoneStatus.index + '].numero')}"
+                                        th:errors="*{telefones[__${telefoneStatus.index}__].numero}">
+                                </small>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ADICIONAR TELEFONE -->
+                <div class="add-card-prototype">
+
+                    <i class="bi bi-plus-circle"></i>
+
+
+                    <span>
+
+                        <strong>
+                            Adicionar outro telefone
+                        </strong>
+
+                        <small>
+                            Inclua outra forma de contato do cliente.
+                        </small>
+
+                    </span>
+
+
+                    <button
+                            type="button"
+                            class="button button-ghost"
+                            id="adicionar-telefone">
+
+                        Adicionar telefone
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- CARTÕES -->
+            <!-- ================================================= -->
+
+            <section class="form-section credit-cards-section">
+
+                <div class="form-section-title">
+
+                    <span class="form-section-icon">
+
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2>
+                            Cartões de crédito
+                        </h2>
+
+
+                        <p>
+                            Atualize os cartões do cliente e mantenha um cartão preferencial.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div id="cartoes-container">
+
+
+                    <div
+                            class="credit-card-form cartao-item"
+                            th:each="cartao, cartaoStatus : *{cartoesCredito}"
+                            th:attr="data-index=${cartaoStatus.index}">
+
+
+                        <!-- ID EXISTENTE -->
+                        <input
+                                type="hidden"
+                                th:field="*{cartoesCredito[__${cartaoStatus.index}__].id}">
+
+
+                        <!-- VALOR REAL DO PREFERENCIAL -->
+                        <input
+                                type="hidden"
+                                class="preferencial-hidden"
+                                th:field="*{cartoesCredito[__${cartaoStatus.index}__].preferencial}">
+
+
+                        <div class="credit-card-form-head">
+
+                            <strong
+                                    class="cartao-titulo"
+                                    th:text="'Cartão ' + ${cartaoStatus.index + 1}">
+
+                                Cartão 1
+
+                            </strong>
+
+
+                            <label class="preferred-choice">
+
+                                <input
+                                        type="radio"
+                                        name="cartao-preferencial-ui"
+                                        class="cartao-preferencial-radio"
+                                        th:checked="${cartao.preferencial}">
+
+
+                                <span></span>
+
+                                Cartão preferencial
+
+                            </label>
+
+                        </div>
+
+
+                        <div class="form-grid three">
+
+
+                            <!-- NÚMERO -->
+                            <label class="span-two">
+
+                                Número do cartão
+
+                                <input
+                                        type="text"
+                                        th:field="*{cartoesCredito[__${cartaoStatus.index}__].numeroCartao}"
+                                        class="campo-cartao"
+                                        inputmode="numeric"
+                                        autocomplete="off"
+                                        placeholder="0000 0000 0000 0000"
+                                        maxlength="19"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('cartoesCredito[' + cartaoStatus.index + '].numeroCartao')}"
+                                        th:errors="*{cartoesCredito[__${cartaoStatus.index}__].numeroCartao}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- NOME IMPRESSO -->
+                            <label>
+
+                                Nome impresso no cartão
+
+                                <input
+                                        type="text"
+                                        th:field="*{cartoesCredito[__${cartaoStatus.index}__].nomeImpresso}"
+                                        placeholder="Como impresso no cartão"
+                                        maxlength="100"
+                                        autocomplete="off"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('cartoesCredito[' + cartaoStatus.index + '].nomeImpresso')}"
+                                        th:errors="*{cartoesCredito[__${cartaoStatus.index}__].nomeImpresso}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- BANDEIRA -->
+                            <label>
+
+                                Bandeira
+
+                                <select
+                                        th:field="*{cartoesCredito[__${cartaoStatus.index}__].bandeira}"
+                                        required>
+
+                                    <option value="">
+                                        Selecione
+                                    </option>
+
+
+                                    <option
+                                            th:each="bandeira : ${bandeiras}"
+                                            th:value="${bandeira}"
+                                            th:text="${bandeira.descricao}">
+                                    </option>
+
+                                </select>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('cartoesCredito[' + cartaoStatus.index + '].bandeira')}"
+                                        th:errors="*{cartoesCredito[__${cartaoStatus.index}__].bandeira}">
+                                </small>
+
+                            </label>
+
+
+                            <!-- CVV -->
+                            <label>
+
+                                Código de segurança
+
+                                <input
+                                        type="text"
+                                        th:field="*{cartoesCredito[__${cartaoStatus.index}__].codigoSeguranca}"
+                                        class="campo-cvv"
+                                        inputmode="numeric"
+                                        autocomplete="off"
+                                        placeholder="CVV"
+                                        maxlength="4"
+                                        required>
+
+
+                                <small
+                                        th:if="${#fields.hasErrors('cartoesCredito[' + cartaoStatus.index + '].codigoSeguranca')}"
+                                        th:errors="*{cartoesCredito[__${cartaoStatus.index}__].codigoSeguranca}">
+                                </small>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ADICIONAR CARTÃO -->
+                <div class="add-card-prototype">
+
+                    <i class="bi bi-plus-circle"></i>
+
+
+                    <span>
+
+                        <strong>
+                            Adicionar outro cartão
+                        </strong>
+
+                        <small>
+                            Inclua outro cartão de crédito do cliente.
+                        </small>
+
+                    </span>
+
+
+                    <button
+                            type="button"
+                            class="button button-ghost"
+                            id="adicionar-cartao">
+
+                        Adicionar cartão
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- AÇÕES -->
+            <!-- ================================================= -->
+
+            <footer class="form-actions">
+
+                <a
+                        class="button button-ghost"
+                        th:href="@{/admin/clientes/{id}(id=${cliente.id})}">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Cancelar
+
+                </a>
+
+
+                <button
+                        class="button button-primary"
+                        type="submit">
+
+                    <i class="bi bi-check-lg"></i>
+
+                    Salvar alterações
+
+                </button>
+
+            </footer>
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL DE VALIDAÇÃO -->
+<!-- ============================================================= -->
+
+<div
+        class="validation-modal-overlay"
+        id="validation-modal"
+        aria-hidden="true">
+
+    <div
+            class="validation-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="validation-modal-title"
+            aria-describedby="validation-modal-message">
+
+
+        <div class="validation-modal-header">
+
+            <div class="validation-modal-icon">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+            </div>
+
+
+            <h2
+                    class="validation-modal-title"
+                    id="validation-modal-title">
+
+                Não foi possível salvar
+
+            </h2>
+
+        </div>
+
+
+        <div class="validation-modal-body">
+
+            <p
+                    class="validation-modal-message"
+                    id="validation-modal-message">
+
+                Verifique os dados informados.
+
+            </p>
+
+        </div>
+
+
+        <div class="validation-modal-footer">
+
+            <button
+                    type="button"
+                    class="validation-modal-confirm"
+                    id="validation-modal-confirm">
+
+                Entendi
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- TEMPLATE DE NOVO ENDEREÇO -->
+<!-- ============================================================= -->
+
+<template id="endereco-template">
+
+    <div class="credit-card-form endereco-item">
+
+
+        <input
+                type="hidden"
+                class="endereco-entrega-marker"
+                value="on">
+
+
+        <input
+                type="hidden"
+                class="endereco-cobranca-marker"
+                value="on">
+
+
+        <div class="credit-card-form-head">
+
+            <strong class="endereco-titulo">
+                Endereço
+            </strong>
+
+
+            <div>
+
+                <label>
+
+                    <input
+                            type="checkbox"
+                            class="endereco-entrega"
+                            value="true">
+
+                    Endereço de entrega
+
+                </label>
+
+
+                <label>
+
+                    <input
+                            type="checkbox"
+                            class="endereco-cobranca"
+                            value="true">
+
+                    Endereço de cobrança
+
+                </label>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-grid three">
+
+
+            <label>
+
+                Identificação
+
+                <input
+                        type="text"
+                        class="endereco-apelido"
+                        maxlength="50"
+                        placeholder="Ex.: Casa, Trabalho">
+
+            </label>
+
+
+            <label>
+
+                CEP
+
+                <input
+                        type="text"
+                        class="endereco-cep campo-cep"
+                        placeholder="00000-000"
+                        maxlength="9"
+                        inputmode="numeric"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Tipo de logradouro
+
+                <select
+                        class="endereco-tipo-logradouro"
+                        required>
+
+                    <option value="">
+                        Selecione
+                    </option>
+
+
+                    <option
+                            th:each="tipo : ${tiposLogradouro}"
+                            th:value="${tipo}"
+                            th:text="${tipo.descricao}">
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label class="span-two">
+
+                Logradouro
+
+                <input
+                        type="text"
+                        class="endereco-logradouro"
+                        maxlength="100"
+                        placeholder="Nome da rua, avenida ou praça"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Número
+
+                <input
+                        type="text"
+                        class="endereco-numero"
+                        maxlength="20"
+                        placeholder="000"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Bairro
+
+                <input
+                        type="text"
+                        class="endereco-bairro"
+                        maxlength="50"
+                        placeholder="Bairro"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Cidade
+
+                <input
+                        type="text"
+                        class="endereco-cidade"
+                        maxlength="50"
+                        placeholder="Cidade"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Estado
+
+                <select
+                        class="endereco-uf"
+                        required>
+
+                    <option value="">
+                        Selecione
+                    </option>
+
+
+                    <option
+                            th:each="uf : ${ufs}"
+                            th:value="${uf}"
+                            th:text="${uf.sigla}">
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                País
+
+                <input
+                        type="text"
+                        class="endereco-pais campo-pais"
+                        value="Brasil"
+                        maxlength="50"
+                        placeholder="Brasil"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Complemento
+
+                <input
+                        type="text"
+                        class="endereco-complemento"
+                        maxlength="50"
+                        placeholder="Apartamento, bloco...">
+
+            </label>
+
+
+            <label>
+
+                Observações
+
+                <input
+                        type="text"
+                        class="endereco-observacoes"
+                        maxlength="255"
+                        placeholder="Ponto de referência...">
+
+            </label>
+
+        </div>
+
+    </div>
+
+</template>
+
+
+<!-- ============================================================= -->
+<!-- TEMPLATE DE NOVO TELEFONE -->
+<!-- ============================================================= -->
+
+<template id="telefone-template">
+
+    <div class="credit-card-form telefone-item">
+
+        <div class="credit-card-form-head">
+
+            <strong class="telefone-titulo">
+                Telefone
+            </strong>
+
+        </div>
+
+
+        <div class="form-grid three">
+
+
+            <label>
+
+                Tipo de telefone
+
+                <select
+                        class="telefone-tipo"
+                        required>
+
+                    <option value="">
+                        Selecione
+                    </option>
+
+
+                    <option
+                            th:each="tipo : ${tiposTelefone}"
+                            th:value="${tipo}"
+                            th:text="${tipo.descricao}">
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                DDD
+
+                <input
+                        type="text"
+                        class="telefone-ddd campo-ddd"
+                        placeholder="11"
+                        maxlength="2"
+                        inputmode="numeric"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Número
+
+                <input
+                        type="text"
+                        class="telefone-numero campo-telefone"
+                        placeholder="99999-9999"
+                        maxlength="10"
+                        inputmode="numeric"
+                        required>
+
+            </label>
+
+        </div>
+
+    </div>
+
+</template>
+
+
+<!-- ============================================================= -->
+<!-- TEMPLATE DE NOVO CARTÃO -->
+<!-- ============================================================= -->
+
+<template id="cartao-template">
+
+    <div class="credit-card-form cartao-item">
+
+
+        <input
+                type="hidden"
+                class="preferencial-hidden"
+                value="false">
+
+
+        <div class="credit-card-form-head">
+
+            <strong class="cartao-titulo">
+                Cartão
+            </strong>
+
+
+            <label class="preferred-choice">
+
+                <input
+                        type="radio"
+                        name="cartao-preferencial-ui"
+                        class="cartao-preferencial-radio">
+
+
+                <span></span>
+
+                Cartão preferencial
+
+            </label>
+
+        </div>
+
+
+        <div class="form-grid three">
+
+
+            <label class="span-two">
+
+                Número do cartão
+
+                <input
+                        type="text"
+                        class="cartao-numero campo-cartao"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="0000 0000 0000 0000"
+                        maxlength="19"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Nome impresso no cartão
+
+                <input
+                        type="text"
+                        class="cartao-nome"
+                        maxlength="100"
+                        autocomplete="off"
+                        placeholder="Como impresso no cartão"
+                        required>
+
+            </label>
+
+
+            <label>
+
+                Bandeira
+
+                <select
+                        class="cartao-bandeira"
+                        required>
+
+                    <option value="">
+                        Selecione
+                    </option>
+
+
+                    <option
+                            th:each="bandeira : ${bandeiras}"
+                            th:value="${bandeira}"
+                            th:text="${bandeira.descricao}">
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                Código de segurança
+
+                <input
+                        type="text"
+                        class="cartao-codigo campo-cvv"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="CVV"
+                        maxlength="4"
+                        required>
+
+            </label>
+
+        </div>
+
+    </div>
+
+</template>
+
+
+<script th:inline="javascript">
+
+    /*
+     * ==========================================================
+     * ELEMENTOS PRINCIPAIS
+     * ==========================================================
+     */
+
+    const formulario =
+        document.querySelector(
+            ".prototype-form"
+        );
+
+
+    /*
+     * ==========================================================
+     * MODAL DE ERRO
+     * ==========================================================
+     */
+
+    const validationModal =
+        document.getElementById(
+            "validation-modal"
+        );
+
+
+    const validationModalMessage =
+        document.getElementById(
+            "validation-modal-message"
+        );
+
+
+    const validationModalConfirm =
+        document.getElementById(
+            "validation-modal-confirm"
+        );
+
+
+    let campoErroAtual =
+        null;
+
+
+    function limparCampoErroAnterior() {
+
+        document
+            .querySelectorAll(
+                ".campo-com-erro"
+            )
+            .forEach(campo => {
+
+                campo.classList.remove(
+                    "campo-com-erro"
+                );
+            });
+    }
+
+
+    function mostrarErro(
+        mensagem,
+        campo = null
+    ) {
+
+        limparCampoErroAnterior();
+
+
+        campoErroAtual =
+            campo;
+
+
+        if (campoErroAtual) {
+
+            campoErroAtual
+                .classList
+                .add(
+                    "campo-com-erro"
+                );
+        }
+
+
+        validationModalMessage.textContent =
+            mensagem;
+
+
+        validationModal
+            .classList
+            .add(
+                "active"
+            );
+
+
+        validationModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+
+        document.body.style.overflow =
+            "hidden";
+
+
+        setTimeout(
+            () => {
+
+                validationModalConfirm.focus();
+
+            },
+            50
+        );
+    }
+
+
+    function fecharModalErro() {
+
+        validationModal
+            .classList
+            .remove(
+                "active"
+            );
+
+
+        validationModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        document.body.style.overflow =
+            "";
+
+
+        if (campoErroAtual) {
+
+            const campo =
+                campoErroAtual;
+
+
+            campo.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+
+            setTimeout(
+                () => {
+
+                    campo.focus();
+
+                },
+                250
+            );
+        }
+    }
+
+
+    validationModalConfirm.addEventListener(
+        "click",
+        fecharModalErro
+    );
+
+
+    validationModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target ===
+                validationModal
+            ) {
+
+                fecharModalErro();
+            }
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape"
+                && validationModal
+                    .classList
+                    .contains("active")
+            ) {
+
+                fecharModalErro();
+            }
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * ERRO RETORNADO PELO CONTROLLER / SERVICE
+     * ==========================================================
+     */
+
+    const erroBackend =
+        /*[[${erro}]]*/ null;
+
+
+    /*
+     * ==========================================================
+     * ENDEREÇOS
+     * ==========================================================
+     */
+
+    const enderecoContainer =
+        document.getElementById(
+            "enderecos-container"
+        );
+
+
+    const enderecoTemplate =
+        document.getElementById(
+            "endereco-template"
+        );
+
+
+    const botaoAdicionarEndereco =
+        document.getElementById(
+            "adicionar-endereco"
+        );
+
+
+    function configurarEndereco(
+        elemento,
+        indice
+    ) {
+
+        elemento.dataset.index =
+            indice;
+
+
+        elemento
+            .querySelector(
+                ".endereco-titulo"
+            )
+            .textContent =
+            `Endereço ${indice + 1}`;
+
+
+        const entrega =
+            elemento.querySelector(
+                ".endereco-entrega"
+            );
+
+
+        const entregaMarker =
+            elemento.querySelector(
+                ".endereco-entrega-marker"
+            );
+
+
+        const cobranca =
+            elemento.querySelector(
+                ".endereco-cobranca"
+            );
+
+
+        const cobrancaMarker =
+            elemento.querySelector(
+                ".endereco-cobranca-marker"
+            );
+
+
+        entrega.name =
+            `enderecos[${indice}].enderecoEntrega`;
+
+
+        entrega.value =
+            "true";
+
+
+        entregaMarker.name =
+            `_enderecos[${indice}].enderecoEntrega`;
+
+
+        cobranca.name =
+            `enderecos[${indice}].enderecoCobranca`;
+
+
+        cobranca.value =
+            "true";
+
+
+        cobrancaMarker.name =
+            `_enderecos[${indice}].enderecoCobranca`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-apelido"
+            )
+            .name =
+            `enderecos[${indice}].apelido`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-cep"
+            )
+            .name =
+            `enderecos[${indice}].cep`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-tipo-logradouro"
+            )
+            .name =
+            `enderecos[${indice}].tipoLogradouro`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-logradouro"
+            )
+            .name =
+            `enderecos[${indice}].logradouro`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-numero"
+            )
+            .name =
+            `enderecos[${indice}].numero`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-bairro"
+            )
+            .name =
+            `enderecos[${indice}].bairro`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-cidade"
+            )
+            .name =
+            `enderecos[${indice}].cidade`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-uf"
+            )
+            .name =
+            `enderecos[${indice}].uf`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-pais"
+            )
+            .name =
+            `enderecos[${indice}].pais`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-complemento"
+            )
+            .name =
+            `enderecos[${indice}].complemento`;
+
+
+        elemento
+            .querySelector(
+                ".endereco-observacoes"
+            )
+            .name =
+            `enderecos[${indice}].observacoes`;
+    }
+
+
+    botaoAdicionarEndereco.addEventListener(
+        "click",
+        function () {
+
+            const indice =
+                enderecoContainer
+                    .querySelectorAll(
+                        ".endereco-item"
+                    )
+                    .length;
+
+
+            const fragmento =
+                enderecoTemplate
+                    .content
+                    .cloneNode(true);
+
+
+            const novoEndereco =
+                fragmento.querySelector(
+                    ".endereco-item"
+                );
+
+
+            configurarEndereco(
+                novoEndereco,
+                indice
+            );
+
+
+            enderecoContainer.appendChild(
+                fragmento
+            );
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * TELEFONES
+     * ==========================================================
+     */
+
+    const telefoneContainer =
+        document.getElementById(
+            "telefones-container"
+        );
+
+
+    const telefoneTemplate =
+        document.getElementById(
+            "telefone-template"
+        );
+
+
+    const botaoAdicionarTelefone =
+        document.getElementById(
+            "adicionar-telefone"
+        );
+
+
+    function configurarTelefone(
+        elemento,
+        indice
+    ) {
+
+        elemento.dataset.index =
+            indice;
+
+
+        elemento
+            .querySelector(
+                ".telefone-titulo"
+            )
+            .textContent =
+            `Telefone ${indice + 1}`;
+
+
+        elemento
+            .querySelector(
+                ".telefone-tipo"
+            )
+            .name =
+            `telefones[${indice}].tipo`;
+
+
+        elemento
+            .querySelector(
+                ".telefone-ddd"
+            )
+            .name =
+            `telefones[${indice}].ddd`;
+
+
+        elemento
+            .querySelector(
+                ".telefone-numero"
+            )
+            .name =
+            `telefones[${indice}].numero`;
+    }
+
+
+    botaoAdicionarTelefone.addEventListener(
+        "click",
+        function () {
+
+            const indice =
+                telefoneContainer
+                    .querySelectorAll(
+                        ".telefone-item"
+                    )
+                    .length;
+
+
+            const fragmento =
+                telefoneTemplate
+                    .content
+                    .cloneNode(true);
+
+
+            const novoTelefone =
+                fragmento.querySelector(
+                    ".telefone-item"
+                );
+
+
+            configurarTelefone(
+                novoTelefone,
+                indice
+            );
+
+
+            telefoneContainer.appendChild(
+                fragmento
+            );
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * CARTÕES
+     * ==========================================================
+     */
+
+    const cartaoContainer =
+        document.getElementById(
+            "cartoes-container"
+        );
+
+
+    const cartaoTemplate =
+        document.getElementById(
+            "cartao-template"
+        );
+
+
+    const botaoAdicionarCartao =
+        document.getElementById(
+            "adicionar-cartao"
+        );
+
+
+    function configurarCartao(
+        elemento,
+        indice
+    ) {
+
+        elemento.dataset.index =
+            indice;
+
+
+        elemento
+            .querySelector(
+                ".cartao-titulo"
+            )
+            .textContent =
+            `Cartão ${indice + 1}`;
+
+
+        elemento
+            .querySelector(
+                ".preferencial-hidden"
+            )
+            .name =
+            `cartoesCredito[${indice}].preferencial`;
+
+
+        elemento
+            .querySelector(
+                ".cartao-numero"
+            )
+            .name =
+            `cartoesCredito[${indice}].numeroCartao`;
+
+
+        elemento
+            .querySelector(
+                ".cartao-nome"
+            )
+            .name =
+            `cartoesCredito[${indice}].nomeImpresso`;
+
+
+        elemento
+            .querySelector(
+                ".cartao-bandeira"
+            )
+            .name =
+            `cartoesCredito[${indice}].bandeira`;
+
+
+        elemento
+            .querySelector(
+                ".cartao-codigo"
+            )
+            .name =
+            `cartoesCredito[${indice}].codigoSeguranca`;
+    }
+
+
+    botaoAdicionarCartao.addEventListener(
+        "click",
+        function () {
+
+            const indice =
+                cartaoContainer
+                    .querySelectorAll(
+                        ".cartao-item"
+                    )
+                    .length;
+
+
+            const fragmento =
+                cartaoTemplate
+                    .content
+                    .cloneNode(true);
+
+
+            const novoCartao =
+                fragmento.querySelector(
+                    ".cartao-item"
+                );
+
+
+            configurarCartao(
+                novoCartao,
+                indice
+            );
+
+
+            cartaoContainer.appendChild(
+                fragmento
+            );
+
+
+            atualizarEventosPreferencial();
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * CARTÃO PREFERENCIAL
+     * ==========================================================
+     */
+
+    function atualizarCartaoPreferencial() {
+
+        const cartoes =
+            cartaoContainer
+                .querySelectorAll(
+                    ".cartao-item"
+                );
+
+
+        cartoes.forEach(cartao => {
+
+            const radio =
+                cartao.querySelector(
+                    ".cartao-preferencial-radio"
+                );
+
+
+            const hidden =
+                cartao.querySelector(
+                    ".preferencial-hidden"
+                );
+
+
+            if (!radio || !hidden) {
+                return;
+            }
+
+
+            hidden.value =
+                radio.checked
+                    ? "true"
+                    : "false";
+        });
+    }
+
+
+    function atualizarEventosPreferencial() {
+
+        cartaoContainer
+            .querySelectorAll(
+                ".cartao-preferencial-radio"
+            )
+            .forEach(radio => {
+
+                radio.onchange =
+                    atualizarCartaoPreferencial;
+            });
+    }
+
+
+    function existeCartaoPreferencial() {
+
+        return Array.from(
+            cartaoContainer
+                .querySelectorAll(
+                    ".cartao-preferencial-radio"
+                )
+        )
+            .some(
+                radio => radio.checked
+            );
+    }
+
+
+    /*
+     * ==========================================================
+     * MÁSCARAS
+     * ==========================================================
+     */
+
+    function somenteNumeros(valor) {
+
+        if (!valor) {
+            return "";
+        }
+
+
+        return String(valor)
+            .replace(
+                /\D/g,
+                ""
+            );
+    }
+
+
+    function formatarCpf(input) {
+
+        let numero =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    11
+                );
+
+
+        numero =
+            numero.replace(
+                /(\d{3})(\d)/,
+                "$1.$2"
+            );
+
+
+        numero =
+            numero.replace(
+                /(\d{3})(\d)/,
+                "$1.$2"
+            );
+
+
+        numero =
+            numero.replace(
+                /(\d{3})(\d{1,2})$/,
+                "$1-$2"
+            );
+
+
+        input.value =
+            numero;
+    }
+
+
+    function formatarCep(input) {
+
+        let numero =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    8
+                );
+
+
+        numero =
+            numero.replace(
+                /(\d{5})(\d+)/,
+                "$1-$2"
+            );
+
+
+        input.value =
+            numero;
+    }
+
+
+    function formatarDDD(input) {
+
+        input.value =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    2
+                );
+    }
+
+
+    function formatarTelefone(input) {
+
+        let numero =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    9
+                );
+
+
+        if (numero.length <= 8) {
+
+            numero =
+                numero.replace(
+                    /(\d{4})(\d+)/,
+                    "$1-$2"
+                );
+
+        } else {
+
+            numero =
+                numero.replace(
+                    /(\d{5})(\d+)/,
+                    "$1-$2"
+                );
+        }
+
+
+        input.value =
+            numero;
+    }
+
+
+    function formatarCartao(input) {
+
+        const numero =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    16
+                );
+
+
+        input.value =
+            numero.replace(
+                /(\d{4})(?=\d)/g,
+                "$1 "
+            );
+    }
+
+
+    function formatarCvv(input) {
+
+        input.value =
+            somenteNumeros(
+                input.value
+            )
+                .slice(
+                    0,
+                    4
+                );
+    }
+
+
+    document.addEventListener(
+        "input",
+        function (event) {
+
+            if (
+                event.target.id === "cpf"
+            ) {
+
+                formatarCpf(
+                    event.target
+                );
+            }
+
+
+            if (
+                event.target
+                    .classList
+                    .contains(
+                        "campo-cep"
+                    )
+            ) {
+
+                formatarCep(
+                    event.target
+                );
+            }
+
+
+            if (
+                event.target
+                    .classList
+                    .contains(
+                        "campo-ddd"
+                    )
+            ) {
+
+                formatarDDD(
+                    event.target
+                );
+            }
+
+
+            if (
+                event.target
+                    .classList
+                    .contains(
+                        "campo-telefone"
+                    )
+            ) {
+
+                formatarTelefone(
+                    event.target
+                );
+            }
+
+
+            if (
+                event.target
+                    .classList
+                    .contains(
+                        "campo-cartao"
+                    )
+            ) {
+
+                formatarCartao(
+                    event.target
+                );
+            }
+
+
+            if (
+                event.target
+                    .classList
+                    .contains(
+                        "campo-cvv"
+                    )
+            ) {
+
+                formatarCvv(
+                    event.target
+                );
+            }
+        }
+    );
+
+
+    /*
+     * ==========================================================
+     * FORMATAÇÃO DOS VALORES CARREGADOS DO BANCO
+     * ==========================================================
+     */
+
+    function formatarCamposExistentes() {
+
+        const cpf =
+            document.getElementById(
+                "cpf"
+            );
+
+
+        if (
+            cpf
+            && cpf.value
+        ) {
+
+            formatarCpf(
+                cpf
+            );
+        }
+
+
+        document
+            .querySelectorAll(
+                ".campo-cep"
+            )
+            .forEach(input => {
+
+                if (input.value) {
+
+                    formatarCep(
+                        input
+                    );
+                }
+            });
+
+
+        document
+            .querySelectorAll(
+                ".campo-ddd"
+            )
+            .forEach(input => {
+
+                if (input.value) {
+
+                    formatarDDD(
+                        input
+                    );
+                }
+            });
+
+
+        document
+            .querySelectorAll(
+                ".campo-telefone"
+            )
+            .forEach(input => {
+
+                if (input.value) {
+
+                    formatarTelefone(
+                        input
+                    );
+                }
+            });
+
+
+        document
+            .querySelectorAll(
+                ".campo-cartao"
+            )
+            .forEach(input => {
+
+                if (input.value) {
+
+                    formatarCartao(
+                        input
+                    );
+                }
+            });
+
+
+        document
+            .querySelectorAll(
+                ".campo-cvv"
+            )
+            .forEach(input => {
+
+                if (input.value) {
+
+                    formatarCvv(
+                        input
+                    );
+                }
+            });
+    }
+
+
+    /*
+     * ==========================================================
+     * CAMPOS OBRIGATÓRIOS
+     * ==========================================================
+     */
+
+    function campoVazio(campo) {
+
+        if (!campo) {
+            return true;
+        }
+
+
+        if (
+            campo.tagName === "SELECT"
+        ) {
+
+            return !campo.value;
+        }
+
+
+        return !campo.value
+            || !campo.value.trim();
+    }
+
+
+    function nomeAmigavelCampo(campo) {
+
+        const nome =
+            campo.name || "";
+
+
+        if (nome === "nome") {
+            return "Nome completo";
+        }
+
+
+        if (nome === "dataNascimento") {
+            return "Data de nascimento";
+        }
+
+
+        if (nome === "genero") {
+            return "Gênero";
+        }
+
+
+        if (nome === "cpf") {
+            return "CPF";
+        }
+
+
+        if (nome === "email") {
+            return "E-mail";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".cep")
+        ) {
+            return "CEP";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".tipoLogradouro")
+        ) {
+            return "Tipo de logradouro";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".logradouro")
+        ) {
+            return "Logradouro";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".numero")
+        ) {
+            return "Número do endereço";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".bairro")
+        ) {
+            return "Bairro";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".cidade")
+        ) {
+            return "Cidade";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".uf")
+        ) {
+            return "Estado";
+        }
+
+
+        if (
+            nome.startsWith("enderecos")
+            && nome.includes(".pais")
+        ) {
+            return "País";
+        }
+
+
+        if (
+            nome.startsWith("telefones")
+            && nome.includes(".tipo")
+        ) {
+            return "Tipo de telefone";
+        }
+
+
+        if (
+            nome.startsWith("telefones")
+            && nome.includes(".ddd")
+        ) {
+            return "DDD";
+        }
+
+
+        if (
+            nome.startsWith("telefones")
+            && nome.includes(".numero")
+        ) {
+            return "Número do telefone";
+        }
+
+
+        if (
+            nome.startsWith("cartoesCredito")
+            && nome.includes(".numeroCartao")
+        ) {
+            return "Número do cartão";
+        }
+
+
+        if (
+            nome.startsWith("cartoesCredito")
+            && nome.includes(".nomeImpresso")
+        ) {
+            return "Nome impresso no cartão";
+        }
+
+
+        if (
+            nome.startsWith("cartoesCredito")
+            && nome.includes(".bandeira")
+        ) {
+            return "Bandeira do cartão";
+        }
+
+
+        if (
+            nome.startsWith("cartoesCredito")
+            && nome.includes(".codigoSeguranca")
+        ) {
+            return "Código de segurança";
+        }
+
+
+        return "Campo";
+    }
+
+
+    function validarCamposObrigatorios() {
+
+        const campos =
+            formulario
+                .querySelectorAll(
+                    "[required]"
+                );
+
+
+        for (const campo of campos) {
+
+            if (
+                campoVazio(campo)
+            ) {
+
+                mostrarErro(
+                    `O campo (${nomeAmigavelCampo(campo)}) é obrigatório.`,
+                    campo
+                );
+
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * E-MAIL
+     * ==========================================================
+     */
+
+    function validarEmailFormulario() {
+
+        const campo =
+            formulario.querySelector(
+                'input[name="email"]'
+            );
+
+
+        if (
+            campo
+            && campo.validity.typeMismatch
+        ) {
+
+            mostrarErro(
+                "Informe um e-mail válido.",
+                campo
+            );
+
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * CPF
+     * ==========================================================
+     */
+
+    function validarCpfFormulario() {
+
+        const campo =
+            document.getElementById(
+                "cpf"
+            );
+
+
+        if (
+            somenteNumeros(
+                campo.value
+            ).length !== 11
+        ) {
+
+            mostrarErro(
+                "O CPF precisa ter 11 dígitos.",
+                campo
+            );
+
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * TELEFONES
+     * ==========================================================
+     */
+
+    function validarTelefonesFormulario() {
+
+        const telefones =
+            telefoneContainer
+                .querySelectorAll(
+                    ".telefone-item"
+                );
+
+
+        for (
+            const telefone
+            of telefones
+            ) {
+
+            const campoDdd =
+                telefone.querySelector(
+                    ".campo-ddd"
+                );
+
+
+            const campoNumero =
+                telefone.querySelector(
+                    ".campo-telefone"
+                );
+
+
+            const ddd =
+                somenteNumeros(
+                    campoDdd.value
+                );
+
+
+            const numero =
+                somenteNumeros(
+                    campoNumero.value
+                );
+
+
+            if (
+                ddd.length !== 2
+            ) {
+
+                mostrarErro(
+                    "O DDD precisa ter 2 dígitos.",
+                    campoDdd
+                );
+
+
+                return false;
+            }
+
+
+            if (
+                numero.length !== 8
+                && numero.length !== 9
+            ) {
+
+                mostrarErro(
+                    "O telefone precisa ter 8 ou 9 dígitos.",
+                    campoNumero
+                );
+
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * CARTÕES
+     * ==========================================================
+     */
+
+    function validarCartoesFormulario() {
+
+        const cartoes =
+            cartaoContainer
+                .querySelectorAll(
+                    ".cartao-item"
+                );
+
+
+        for (
+            const cartao
+            of cartoes
+            ) {
+
+            const numeroCampo =
+                cartao.querySelector(
+                    ".campo-cartao"
+                );
+
+
+            const cvvCampo =
+                cartao.querySelector(
+                    ".campo-cvv"
+                );
+
+
+            const numero =
+                somenteNumeros(
+                    numeroCampo.value
+                );
+
+
+            const cvv =
+                somenteNumeros(
+                    cvvCampo.value
+                );
+
+
+            if (
+                numero.length !== 16
+            ) {
+
+                mostrarErro(
+                    "O Cartão de Crédito precisa ter 16 dígitos.",
+                    numeroCampo
+                );
+
+
+                return false;
+            }
+
+
+            if (
+                cvv.length !== 3
+                && cvv.length !== 4
+            ) {
+
+                mostrarErro(
+                    "O código de segurança precisa ter 3 ou 4 dígitos.",
+                    cvvCampo
+                );
+
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * CARTÃO PREFERENCIAL
+     * ==========================================================
+     */
+
+    function validarCartaoPreferencial() {
+
+        if (
+            existeCartaoPreferencial()
+        ) {
+
+            return true;
+        }
+
+
+        const radio =
+            cartaoContainer
+                .querySelector(
+                    ".cartao-preferencial-radio"
+                );
+
+
+        mostrarErro(
+            "É necessário selecionar um Cartão de Crédito Preferencial.",
+            radio
+        );
+
+
+        return false;
+    }
+
+
+    /*
+     * ==========================================================
+     * ENDEREÇOS DE ENTREGA E COBRANÇA
+     * ==========================================================
+     */
+
+    function validarTiposEndereco() {
+
+        const enderecos =
+            enderecoContainer
+                .querySelectorAll(
+                    ".endereco-item"
+                );
+
+
+        let possuiEntrega =
+            false;
+
+
+        let possuiCobranca =
+            false;
+
+
+        enderecos.forEach(
+            endereco => {
+
+                const entrega =
+                    endereco.querySelector(
+                        ".endereco-entrega"
+                    );
+
+
+                const cobranca =
+                    endereco.querySelector(
+                        ".endereco-cobranca"
+                    );
+
+
+                if (
+                    entrega
+                    && entrega.checked
+                ) {
+
+                    possuiEntrega =
+                        true;
+                }
+
+
+                if (
+                    cobranca
+                    && cobranca.checked
+                ) {
+
+                    possuiCobranca =
+                        true;
+                }
+            }
+        );
+
+
+        if (
+            !possuiEntrega
+            && !possuiCobranca
+        ) {
+
+            mostrarErro(
+                "O cliente deve possuir pelo menos um Endereço de Entrega e um Endereço de Cobrança.",
+                enderecoContainer.querySelector(
+                    ".endereco-entrega"
+                )
+            );
+
+
+            return false;
+        }
+
+
+        if (
+            !possuiEntrega
+        ) {
+
+            mostrarErro(
+                "O cliente deve possuir pelo menos um Endereço de Entrega.",
+                enderecoContainer.querySelector(
+                    ".endereco-entrega"
+                )
+            );
+
+
+            return false;
+        }
+
+
+        if (
+            !possuiCobranca
+        ) {
+
+            mostrarErro(
+                "O cliente deve possuir pelo menos um Endereço de Cobrança.",
+                enderecoContainer.querySelector(
+                    ".endereco-cobranca"
+                )
+            );
+
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    /*
+     * ==========================================================
+     * INICIALIZAÇÃO
+     * ==========================================================
+     */
+
+    atualizarEventosPreferencial();
+
+    atualizarCartaoPreferencial();
+
+    formatarCamposExistentes();
+
+
+    if (
+        erroBackend
+    ) {
+
+        mostrarErro(
+            erroBackend
+        );
+    }
+
+
+    /*
+     * ==========================================================
+     * ENVIO DO FORMULÁRIO
+     * ==========================================================
+     */
+
+    formulario.addEventListener(
+        "submit",
+        function (event) {
+
+            if (
+                !validarCamposObrigatorios()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarEmailFormulario()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarCpfFormulario()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarTelefonesFormulario()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarCartoesFormulario()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarCartaoPreferencial()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            if (
+                !validarTiposEndereco()
+            ) {
+
+                event.preventDefault();
+
+                return;
+            }
+
+
+            /*
+             * Atualiza os hidden preferencial=true/false
+             * antes do POST.
+             */
+            atualizarCartaoPreferencial();
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
