@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Chatbot local
+.booknexus-local.properties
+.venv/
+__pycache__/
+chatbot/artifacts/

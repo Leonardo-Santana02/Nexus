@@ -27,16 +27,12 @@ public class AnaliseVendasController {
         this.analiseVendasService = analiseVendasService;
     }
 
-
     /*
      * ==========================================================
      * TELA DE ANÁLISE DE VENDAS
      * ==========================================================
      *
      * Renderiza o template admin/dashboard.html.
-     *
-     * Aceita tanto /admin/dashboard (link do sidebar) quanto
-     * /admin/analise-vendas (rota semântica).
      *
      * Quando os filtros são informados, executa a análise e
      * passa o resultado via model. Quando não são informados,
@@ -67,15 +63,12 @@ public class AnaliseVendasController {
             categoriasDisponiveis = analiseVendasService.listarCategoriasDisponiveis();
 
             /*
-             * Sem filtros: apenas exibe a tela com os campos vazios
-             * e as categorias disponíveis.
+             * Sem filtros: apenas exibe a tela com os campos vazio e as categorias disponíveis.
              */
-            if (dataInicio == null && dataFim == null
-                    && (categorias == null || categorias.isEmpty())) {
+            if (dataInicio == null && dataFim == null && (categorias == null || categorias.isEmpty())) {
 
                 /*
-                 * Datas padrão sugeridas (últimos 6 meses) — apenas
-                 * para o formulário começar preenchido.
+                 * Datas padrão sugeridas (últimos 6 meses) — apenas para o formulário começar preenchido.
                  */
                 dataFim = LocalDate.now();
                 dataInicio = dataFim.minusMonths(5).withDayOfMonth(1);
@@ -93,8 +86,7 @@ public class AnaliseVendasController {
             /*
              * Com filtros: executa a análise.
              */
-            resultado = analiseVendasService.analisar(
-                    dataInicio, dataFim, categorias);
+            resultado = analiseVendasService.analisar(dataInicio, dataFim, categorias);
 
             model.addAttribute("dataInicio", dataInicio);
             model.addAttribute("dataFim", dataFim);

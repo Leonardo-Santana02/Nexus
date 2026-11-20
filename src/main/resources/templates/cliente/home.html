@@ -1,4 +1,3 @@
-<html>
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 
@@ -248,6 +247,7 @@
             color: #1e2c26;
             align-self: flex-start;
             border-bottom-left-radius: 6px;
+            white-space: pre-line;
         }
 
         .message.user {
@@ -309,6 +309,30 @@
         .chat-input-area button:hover {
             background: #3a5f4f;
         }
+
+        .chat-preferences, .chat-status {
+            padding: .55rem 1.2rem;
+            background: #f5f7f4;
+            color: #24382f;
+        }
+
+        .chat-preferences summary { cursor: pointer; font-weight: 600; }
+        .chat-preferences form { display: grid; gap: .4rem; margin-top: .5rem; }
+        .chat-preferences input { width: 100%; padding: .4rem; }
+        .chat-status { margin: 0; font-size: .85rem; }
+        .chat-feedback { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+        .chat-feedback button, .chat-preferences button {
+            padding: .28rem .55rem;
+            border: 1px solid #577867;
+            border-radius: .4rem;
+            color: #1e2c26;
+            background: #f5f7f4;
+            cursor: pointer;
+        }
+        .chat-feedback button[aria-pressed="true"] { background: #2d4a3e; color: white; }
+        .chat-input-area input { min-width: 0; }
+        .chat-sidebar button:disabled { opacity: .6; cursor: default; }
+        .chat-sidebar :focus-visible { outline: 2px solid #577867; outline-offset: 2px; }
 
         @keyframes fadeUp {
 
@@ -1063,7 +1087,7 @@
 
 <button
         class="chat-toggle-btn"
-        id="chatToggleBtn"
+        id="chatToggleBtn" type="button" aria-controls="chatSidebar" aria-expanded="false"
         aria-label="Abrir chatbot">
 
     <i class="bi bi-chat-dots-fill"></i>
@@ -1081,7 +1105,7 @@
 
 <aside
         class="chat-sidebar"
-        id="chatSidebar"
+        id="chatSidebar" inert
         role="dialog"
         aria-label="Chatbot BookNexus">
 
@@ -1108,48 +1132,26 @@
     </div>
 
 
-    <div
-            class="chat-messages"
-            id="chatMessages">
-
-        <div class="message bot">
-
-            Olá! Sou o assistente da BookNexus.
-
-            <br>
-
-            Posso ajudar com recomendações ou dúvidas sobre pedidos.
-
-
-            <span class="time">
-                agora
-            </span>
-
-        </div>
-
-    </div>
-
-
-    <div class="chat-input-area">
-
-        <input
-                type="text"
-                id="chatInput"
-                placeholder="Digite sua mensagem..."
-                aria-label="Digite sua mensagem">
-
-
-        <button
-                type="button"
-                id="chatSendBtn">
-
-            <i class="bi bi-send-fill"></i>
-
+    <details class="chat-preferences">
+        <summary>Preferências de leitura</summary>
+        <form id="chatPreferences">
+            <label for="chatFavorites">Gêneros ou temas favoritos</label>
+            <input id="chatFavorites" maxlength="200" disabled>
+            <label for="chatAvoid">Gêneros ou temas que prefere evitar</label>
+            <input id="chatAvoid" maxlength="200" disabled>
+            <button type="submit" disabled>Salvar preferências</button>
+        </form>
+    </details>
+    <div class="chat-messages" id="chatMessages" role="log" aria-label="Conversa"></div>
+    <p class="chat-status" id="chatStatus" role="status" hidden></p>
+    <form class="chat-input-area" id="chatForm">
+        <input type="text" id="chatInput" maxlength="500" placeholder="Digite sua mensagem..."
+               aria-label="Digite sua mensagem" disabled>
+        <button type="submit" id="chatSendBtn" disabled>
+            <i class="bi bi-send-fill" aria-hidden="true"></i>
             Enviar
-
         </button>
-
-    </div>
+    </form>
 
 </aside>
 
@@ -1616,268 +1618,8 @@
     );
 
 
-    /* =============================================================
-       CHATBOT
-       ============================================================= */
-
-    (function () {
-
-        const chatSidebar =
-            document.getElementById(
-                'chatSidebar'
-            );
-
-
-        const chatOverlay =
-            document.getElementById(
-                'chatOverlay'
-            );
-
-
-        const chatToggleBtn =
-            document.getElementById(
-                'chatToggleBtn'
-            );
-
-
-        const chatCloseBtn =
-            document.getElementById(
-                'chatCloseBtn'
-            );
-
-
-        const chatMessages =
-            document.getElementById(
-                'chatMessages'
-            );
-
-
-        const chatInput =
-            document.getElementById(
-                'chatInput'
-            );
-
-
-        const chatSendBtn =
-            document.getElementById(
-                'chatSendBtn'
-            );
-
-
-        function openChat() {
-
-            chatSidebar.classList.add(
-                'open'
-            );
-
-
-            chatOverlay.classList.add(
-                'active'
-            );
-
-
-            setTimeout(
-                () => chatInput.focus(),
-                150
-            );
-        }
-
-
-        function closeChat() {
-
-            chatSidebar.classList.remove(
-                'open'
-            );
-
-
-            chatOverlay.classList.remove(
-                'active'
-            );
-        }
-
-
-        chatToggleBtn.addEventListener(
-            'click',
-            function (event) {
-
-                event.stopPropagation();
-
-
-                if (
-                    chatSidebar.classList.contains(
-                        'open'
-                    )
-                ) {
-
-                    closeChat();
-
-                } else {
-
-                    openChat();
-                }
-            }
-        );
-
-
-        chatCloseBtn.addEventListener(
-            'click',
-            closeChat
-        );
-
-
-        chatOverlay.addEventListener(
-            'click',
-            closeChat
-        );
-
-
-        function addMessage(
-            text,
-            sender = 'user'
-        ) {
-
-            const msgDiv =
-                document.createElement(
-                    'div'
-                );
-
-
-            msgDiv.className =
-                `message ${sender}`;
-
-
-            const now =
-                new Date();
-
-
-            const timeStr =
-                now
-                    .getHours()
-                    .toString()
-                    .padStart(
-                        2,
-                        '0'
-                    )
-                +
-                ':'
-                +
-                now
-                    .getMinutes()
-                    .toString()
-                    .padStart(
-                        2,
-                        '0'
-                    );
-
-
-            /*
-             * O texto digitado é inserido como texto,
-             * evitando interpretar HTML fornecido pelo usuário.
-             */
-
-            const textoMensagem =
-                document.createTextNode(
-                    text + ' '
-                );
-
-
-            const horario =
-                document.createElement(
-                    'span'
-                );
-
-
-            horario.className =
-                'time';
-
-
-            horario.textContent =
-                timeStr;
-
-
-            msgDiv.appendChild(
-                textoMensagem
-            );
-
-
-            msgDiv.appendChild(
-                horario
-            );
-
-
-            chatMessages.appendChild(
-                msgDiv
-            );
-
-
-            chatMessages.scrollTop =
-                chatMessages.scrollHeight;
-        }
-
-
-        function sendMessage() {
-
-            const text =
-                chatInput.value.trim();
-
-
-            if (text === '') {
-
-                return;
-            }
-
-
-            addMessage(
-                text,
-                'user'
-            );
-
-
-            chatInput.value =
-                '';
-        }
-
-
-        chatSendBtn.addEventListener(
-            'click',
-            sendMessage
-        );
-
-
-        chatInput.addEventListener(
-            'keypress',
-            function (event) {
-
-                if (event.key === 'Enter') {
-
-                    event.preventDefault();
-
-                    sendMessage();
-                }
-            }
-        );
-
-
-        document.addEventListener(
-            'keydown',
-            function (event) {
-
-                if (
-                    event.key === 'Escape'
-                    &&
-                    chatSidebar.classList.contains(
-                        'open'
-                    )
-                ) {
-
-                    closeChat();
-                }
-            }
-        );
-
-    })();
-
 </script>
+<script th:src="@{/js/chatbot.js}" src="/js/chatbot.js" defer></script>
 
 
 </body>

@@ -37,18 +37,7 @@ public class DevolucaoService {
 
     private static final Logger logger = LoggerFactory.getLogger(DevolucaoService.class);
 
-    /**
-     * Status do pedido que indicam devolução em andamento.
-     * Usados para validar se um item já está em outra devolução ativa.
-     *
-     * Inclui EM_TRANSPORTE, pois a devolução passa por essa fase
-     * logística antes de ser concluída em ENTREGUE.
-     */
-    private static final List<StatusPedido> STATUS_DEVOLUCAO_ATIVA = List.of(
-            StatusPedido.EM_TROCA,
-            StatusPedido.TROCA_AUTORIZADA,
-            StatusPedido.EM_TRANSPORTE
-    );
+    private static final List<StatusPedido> STATUS_DEVOLUCAO_ATIVA = List.of(StatusPedido.EM_TROCA, StatusPedido.TROCA_AUTORIZADA, StatusPedido.EM_TRANSPORTE);
 
     private final DevolucaoRepository devolucaoRepository;
     private final PedidoRepository pedidoRepository;
@@ -70,12 +59,6 @@ public class DevolucaoService {
         this.cupomService = cupomService;
     }
 
-
-    /*
-     * ==========================================================
-     * SOLICITAÇÃO DE DEVOLUÇÃO (CLIENTE)
-     * ==========================================================
-     */
 
     @Transactional
     public Devolucao solicitarDevolucao(Long pedidoId,
@@ -187,13 +170,6 @@ public class DevolucaoService {
         return salva;
     }
 
-
-    /*
-     * ==========================================================
-     * AÇÕES DO ADMIN
-     * ==========================================================
-     */
-
     @Transactional
     public Devolucao autorizarDevolucao(Long devolucaoId,
                                         BigDecimal valorAprovado,
@@ -250,28 +226,10 @@ public class DevolucaoService {
         return salva;
     }
 
-
-    /**
-     * Admin avança o status de uma devolução já autorizada.
-     *
-     * Fluxo: TROCA_AUTORIZADA → EM_TRANSPORTE → ENTREGUE
-     *
-     * Delega a validação de transição ao PedidoService, que já
-     * conhece todas as regras.
-     *
-     * A confirmação de entrega (ENTREGUE) é feita via
-     * confirmarRecebimento(), que também gera o cupom e aplica a
-     * decisão de estoque item a item.
-     *
-     * Este método serve para avançar de TROCA_AUTORIZADA para
-     * EM_TRANSPORTE.
-     */
     @Transactional
-    public Devolucao avancarStatusDevolucao(Long devolucaoId,
-                                            StatusPedido novoStatus) {
+    public Devolucao avancarStatusDevolucao(Long devolucaoId, StatusPedido novoStatus) {
 
         validarDevolucaoId(devolucaoId);
-
         if (novoStatus == null) {
             throw new ValidacaoException("Novo status é obrigatório.");
         }
@@ -281,21 +239,12 @@ public class DevolucaoService {
 
         StatusPedido statusAtual = pedido.getStatus();
 
-        /*
-         * Só permite avançar quando o pedido está em TROCA_AUTORIZADA.
-         * O avanço para ENTREGUE é feito por confirmarRecebimento(),
-         * pois envolve checklist de estoque + geração de cupom.
-         */
         if (statusAtual != StatusPedido.TROCA_AUTORIZADA) {
-            throw new ValidacaoException(
-                    "Só é possível avançar devoluções com status 'Troca autorizada'. " +
-                            "Status atual: '" + statusAtual.getDescricao() + "'.");
+            throw new ValidacaoException("Só é possível avançar devoluções com status 'Troca autorizada'. " + "Status atual: '" + statusAtual.getDescricao() + "'.");
         }
 
         if (novoStatus != StatusPedido.EM_TRANSPORTE) {
-            throw new ValidacaoException(
-                    "O próximo status da devolução é 'Em transporte'. " +
-                            "Use a confirmação de recebimento para concluir.");
+            throw new ValidacaoException("O próximo status da devolução é 'Em transporte'. " + "Use a confirmação de recebimento para concluir.");
         }
 
         pedidoService.atualizarStatus(pedido.getId(), novoStatus);
@@ -306,25 +255,10 @@ public class DevolucaoService {
         return buscarPorId(devolucaoId);
     }
 
-
-    /**
-     * Admin confirma o recebimento dos itens devolvidos.
-     *
-     * Pré-requisito: pedido com status EM_TRANSPORTE (a troca já
-     * foi autorizada e despachada).
-     *
-     * Efeitos:
-     * - Aplica a decisão de estoque item a item.
-     * - Registra dataRecebimento.
-     * - Gera o cupom de troca.
-     * - Muda o status do pedido para ENTREGUE (estado final).
-     */
     @Transactional
-    public Devolucao confirmarRecebimento(Long devolucaoId,
-                                          Map<Long, Boolean> itensDevolverAoEstoque) {
+    public Devolucao confirmarRecebimento(Long devolucaoId, Map<Long, Boolean> itensDevolverAoEstoque) {
 
         validarDevolucaoId(devolucaoId);
-
         Devolucao devolucao = buscarPorId(devolucaoId);
         Pedido pedido = devolucao.getPedido();
 
@@ -355,10 +289,6 @@ public class DevolucaoService {
         devolucao.setCupomGerado(cupom);
         Devolucao salva = devolucaoRepository.save(devolucao);
 
-        /*
-         * Estado final: a troca foi concluída.
-         * O pedido passa para ENTREGUE.
-         */
         pedidoService.atualizarStatus(pedido.getId(), StatusPedido.ENTREGUE);
 
         logger.info("Recebimento confirmado e cupom gerado. devolucaoId={}, " +
@@ -368,18 +298,6 @@ public class DevolucaoService {
         return salva;
     }
 
-
-    /**
-     * Cliente cancela a própria devolução (só antes de autorizada).
-     *
-     * Efeitos:
-     * - Remove a Devolucao.
-     * - Volta o status do pedido para ENTREGUE.
-     *
-     * Observação: para isso funcionar, o PedidoService precisa
-     * permitir a transição EM_TROCA -> ENTREGUE no
-     * transicaoPermitida.
-     */
     @Transactional
     public void cancelarDevolucao(Long devolucaoId, Long clienteId) {
 
@@ -409,11 +327,6 @@ public class DevolucaoService {
     }
 
 
-    /*
-     * ==========================================================
-     * CONSULTAS
-     * ==========================================================
-     */
 
     @Transactional(readOnly = true)
     public Devolucao buscarPorId(Long id) {
@@ -422,7 +335,6 @@ public class DevolucaoService {
         return devolucaoRepository.findByIdComDetalhes(id)
                 .orElseThrow(() -> new ValidacaoException("Devolução não encontrada."));
     }
-
 
     @Transactional(readOnly = true)
     public List<Devolucao> listarTodas() {
@@ -455,12 +367,6 @@ public class DevolucaoService {
     }
 
 
-    /*
-     * ==========================================================
-     * VALIDAÇÕES PRIVADAS
-     * ==========================================================
-     */
-
     private void validarIdsObrigatorios(Long pedidoId, Long clienteId, MotivoDevolucao motivo) {
         validarPedidoId(pedidoId);
         validarClienteId(clienteId);
@@ -470,13 +376,11 @@ public class DevolucaoService {
         }
     }
 
-
     private void validarPedidoId(Long pedidoId) {
         if (pedidoId == null || pedidoId <= 0) {
             throw new ValidacaoException("Pedido é obrigatório.");
         }
     }
-
 
     private void validarClienteId(Long clienteId) {
         if (clienteId == null || clienteId <= 0) {
@@ -484,13 +388,11 @@ public class DevolucaoService {
         }
     }
 
-
     private void validarDevolucaoId(Long devolucaoId) {
         if (devolucaoId == null || devolucaoId <= 0) {
             throw new ValidacaoException("Devolução é obrigatória.");
         }
     }
-
 
     private Pedido buscarPedido(Long pedidoId) {
         return pedidoRepository.findById(pedidoId)
@@ -499,10 +401,7 @@ public class DevolucaoService {
 
 
     private Cliente validarPosseDoPedido(Pedido pedido, Long clienteId) {
-        if (pedido.getCliente() == null
-                || pedido.getCliente().getId() == null
-                || !pedido.getCliente().getId().equals(clienteId)) {
-
+        if (pedido.getCliente() == null || pedido.getCliente().getId() == null || !pedido.getCliente().getId().equals(clienteId)) {
             throw new ValidacaoException("Este pedido não pertence ao cliente informado.");
         }
 
@@ -527,25 +426,11 @@ public class DevolucaoService {
         }
     }
 
-
-    /**
-     * Filtra os itens do pedido de acordo com os IDs informados.
-     *
-     * Como o ItemPedido não tem referência direta ao Pedido, iteramos
-     * pedido.getItens() e cruzamos com os IDs informados. Dessa
-     * forma, garantimos que os itens selecionados pertencem ao
-     * pedido e evitamos que um cliente mal-intencionado passe IDs
-     * de itens de outro pedido.
-     */
     private List<ItemPedido> filtrarItensDoPedido(Pedido pedido, List<Long> itensIds) {
-        Set<Long> idsSelecionados = itensIds.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        Set<Long> idsSelecionados = itensIds.stream().filter(Objects::nonNull).collect(Collectors.toSet());
 
-        List<ItemPedido> itens = pedido.getItens().stream()
-                .filter(item -> item.getId() != null
-                        && idsSelecionados.contains(item.getId()))
-                .collect(Collectors.toList());
+        List<ItemPedido> itens = pedido.getItens().stream().filter(item -> item.getId() != null
+                        && idsSelecionados.contains(item.getId())).collect(Collectors.toList());
 
         if (itens.isEmpty()) {
             throw new ValidacaoException("Nenhum item válido foi selecionado.");
@@ -559,11 +444,9 @@ public class DevolucaoService {
         return itens;
     }
 
-
     private void validarItensNaoDevolvidos(List<ItemPedido> itens) {
         for (ItemPedido item : itens) {
-            if (devolucaoRepository.existsItemEmDevolucaoAtiva(
-                    item.getId(), STATUS_DEVOLUCAO_ATIVA)) {
+            if (devolucaoRepository.existsItemEmDevolucaoAtiva(item.getId(), STATUS_DEVOLUCAO_ATIVA)) {
 
                 String titulo = item.getProduto() != null
                         ? item.getProduto().getTitulo()
@@ -575,7 +458,6 @@ public class DevolucaoService {
         }
     }
 
-
     private BigDecimal calcularValorItens(List<ItemPedido> itens) {
         return itens.stream()
                 .map(ItemPedido::getPrecoTotal)
@@ -584,12 +466,6 @@ public class DevolucaoService {
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
-
-    /**
-     * Calcula a parcela proporcional do frete para os itens selecionados.
-     *
-     * Fórmula: (frete_total * subtotal_selecionados) / subtotal_total
-     */
     private BigDecimal calcularParcelaFrete(Pedido pedido, List<ItemPedido> itensSelecionados) {
         BigDecimal freteTotal = pedido.getValorFrete();
 
@@ -628,16 +504,7 @@ public class DevolucaoService {
         return valorAprovado.min(solicitado).setScale(2, RoundingMode.HALF_UP);
     }
 
-
-    /**
-     * Aplica a decisão do admin sobre quais itens voltam ao estoque.
-     * Se o mapa for nulo, todos voltam (comportamento padrão).
-     *
-     * Quando um item volta ao estoque, incrementa produto.estoque.
-     */
-    private void aplicarDecisaoEstoque(Devolucao devolucao,
-                                       Map<Long, Boolean> itensDevolverAoEstoque) {
-
+    private void aplicarDecisaoEstoque(Devolucao devolucao, Map<Long, Boolean> itensDevolverAoEstoque) {
         for (ItemDevolucao item : devolucao.getItens()) {
 
             Boolean devolver = null;
@@ -646,18 +513,13 @@ public class DevolucaoService {
                 devolver = itensDevolverAoEstoque.get(item.getId());
             }
 
-            /*
-             * Se o admin não decidiu, mantemos o padrão:
-             * todos os itens voltam ao estoque.
-             */
             if (devolver == null) {
                 devolver = Boolean.TRUE;
             }
 
             item.setDevolverAoEstoque(devolver);
 
-            if (devolver && item.getItemPedido() != null
-                    && item.getItemPedido().getProduto() != null) {
+            if (devolver && item.getItemPedido() != null && item.getItemPedido().getProduto() != null) {
 
                 var produto = item.getItemPedido().getProduto();
                 Integer estoqueAtual = produto.getEstoque();

@@ -48,7 +48,6 @@ public class AnaliseVendasService {
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
 
-
     public AnaliseVendasService(PedidoRepository pedidoRepository,
                                 ProdutoRepository produtoRepository) {
         this.pedidoRepository = pedidoRepository;
@@ -59,7 +58,6 @@ public class AnaliseVendasService {
     public List<String> listarCategoriasDisponiveis() {
         return produtoRepository.listarGenerosDisponiveis();
     }
-
 
     @Transactional(readOnly = true)
     public Map<String, Object> analisar(LocalDate dataInicio, LocalDate dataFim, List<String> categorias) {
@@ -119,7 +117,6 @@ public class AnaliseVendasService {
             int indiceMes = meses.indexOf(YearMonth.from(pedido.getDataCriacao()));
 
             if (indiceMes < 0) {
-                // Segurança: pedido fora do período esperado (não deve acontecer)
                 continue;
             }
 
@@ -131,7 +128,6 @@ public class AnaliseVendasService {
                 String categoria = item.getProduto().getGenero();
 
                 if (!acumuladoPorCategoria.containsKey(categoria)) {
-                    // Categoria não selecionada pelo admin — ignorar
                     continue;
                 }
 
@@ -227,10 +223,7 @@ public class AnaliseVendasService {
      *
      * Se subtotal = 0, retorna o próprio precoItem (sem rateio).
      */
-    private BigDecimal aplicarRateio(BigDecimal precoItem,
-                                     BigDecimal subtotal,
-                                     BigDecimal desconto,
-                                     BigDecimal frete) {
+    private BigDecimal aplicarRateio(BigDecimal precoItem, BigDecimal subtotal, BigDecimal desconto, BigDecimal frete) {
 
         if (precoItem == null) {
             return BigDecimal.ZERO;
@@ -288,9 +281,7 @@ public class AnaliseVendasService {
      * - Período mínimo de 1 mês e máximo de 24 meses (RN0072).
      * - Ao menos 1 categoria selecionada.
      */
-    private void validarFiltros(LocalDate dataInicio,
-                                LocalDate dataFim,
-                                List<String> categorias) {
+    private void validarFiltros(LocalDate dataInicio, LocalDate dataFim, List<String> categorias) {
 
         if (dataInicio == null) {
             throw new ValidacaoException("Data de início é obrigatória.");
